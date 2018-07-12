@@ -4,6 +4,7 @@
  */
 package name.martingeisse.esdk2.demo.nes;
 
+import name.martingeisse.esdk2.demo.nes.model.Constants;
 import name.martingeisse.esdk2.demo.nes.system.Launcher;
 import name.martingeisse.esdk2.demo.nes.ui.Screen;
 import org.lwjgl.input.Keyboard;
@@ -19,17 +20,16 @@ public class Main {
 	public static void main(String[] args) throws Exception {
 
 		Launcher launcher = new Launcher(args);
-		launcher.setScreenWidth(256);
-		launcher.setScreenWidth(240);
+		launcher.setScreenWidth(Constants.SCREEN_WIDTH);
+		launcher.setScreenHeight(Constants.SCREEN_HEIGHT);
 		launcher.startup();
 
 		Screen screen = new Screen();
-		screen.setPixel(0, 0, 0xffff0000);
+		screen.setPixel(10, 10, 0xffffffff);
 
 		while (true) {
 
 			// draw
-			// TODO draw
 			screen.render();
 
 			// OS-related housekeeping

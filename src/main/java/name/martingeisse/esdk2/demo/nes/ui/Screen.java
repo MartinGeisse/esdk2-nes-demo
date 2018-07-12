@@ -4,10 +4,12 @@
  */
 package name.martingeisse.esdk2.demo.nes.ui;
 
+import name.martingeisse.esdk2.demo.nes.model.Constants;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL14;
 
+import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
 /**
@@ -15,18 +17,18 @@ import java.nio.IntBuffer;
  */
 public class Screen {
 
-	private final IntBuffer buffer = IntBuffer.allocate(256 * 240);
+	private final IntBuffer buffer = ByteBuffer.allocateDirect(Constants.SCREEN_WIDTH * Constants.SCREEN_HEIGHT * 4).asIntBuffer();
 
 	public void setPixel(int x, int y, int rgb) {
-		if (x < 0 || x >= 256 || y < 0 || y >= 240) {
+		if (x < 0 || x >= Constants.SCREEN_WIDTH || y < 0 || y >= Constants.SCREEN_HEIGHT) {
 			throw new IllegalArgumentException("position outside screen bounds: " + x + ", " + y);
 		}
-		buffer.put(y * 256 + x, rgb);
+		buffer.put(y * Constants.SCREEN_WIDTH + x, rgb);
 	}
 
 	public void render() {
 		GL14.glWindowPos2i(0, 0);
-		GL11.glDrawPixels(256, 240, GL11.GL_RGB, GL12.GL_UNSIGNED_INT_8_8_8_8, buffer);
+		GL11.glDrawPixels(Constants.SCREEN_WIDTH, Constants.SCREEN_HEIGHT, GL11.GL_RGB, GL12.GL_UNSIGNED_INT_8_8_8_8, buffer);
 	}
 
 }
