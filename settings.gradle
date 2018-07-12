@@ -1,0 +1,2 @@
+include ':esdk2'
+project(':esdk2').projectDir = new File(settingsDir, '../esdk2')

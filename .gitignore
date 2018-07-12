@@ -1,0 +1,6 @@
+.DS_Store
+*~
+/out
+/.idea
+/esdk2-nes-demo.iml
+/ise
