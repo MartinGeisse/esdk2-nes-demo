@@ -27,7 +27,7 @@ public class Main {
 		launcher.setScreenHeight(Constants.SCREEN_HEIGHT + 100);
 		launcher.startup();
 
-		CartridgeFileContents cartridgeFileContents = new CartridgeFileContents(new File("~/test.nes"));
+		CartridgeFileContents cartridgeFileContents = new CartridgeFileContents(new File("/Users/martin/test.nes"));
 		SequentialNesModel model = new SequentialNesModel(cartridgeFileContents);
 
 		while (true) {

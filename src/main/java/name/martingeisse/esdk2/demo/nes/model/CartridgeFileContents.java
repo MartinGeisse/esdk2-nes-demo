@@ -20,7 +20,7 @@ public final class CartridgeFileContents {
 				throw new CartridgeFileFormatException("invalid magic number");
 			}
 			int numberOfPrgRomBanks = in.read(); // 16kB per bank
-			int numberOChrRomBanks = in.read(); // 8kB per bank
+			int numberOfChrRomBanks = in.read(); // 8kB per bank
 			int controlByte1 = in.read();
 			int controlByte2 = in.read();
 			int numberOfRamBanks = in.read();
@@ -29,6 +29,12 @@ public final class CartridgeFileContents {
 					throw new CartridgeFileFormatException("header fill bytes not 0");
 				}
 			}
+
+			// debugging output
+			System.out.println("number of 16kB PRG-ROM banks: " + numberOfPrgRomBanks);
+			System.out.println("number of 8kB CHR-ROM banks: " + numberOfChrRomBanks);
+			System.out.println("number of 8kB RAM banks: " + numberOfRamBanks);
+			System.out.println("control bytes: " + Integer.toHexString(controlByte1) + ", " + Integer.toHexString(controlByte2));
 
 			// validate header and check if all required features are supported
 			int mapperNumber = ((controlByte1 >> 4) & 0x0f) + (controlByte2 & 0xf0);
@@ -50,7 +56,7 @@ public final class CartridgeFileContents {
 			}
 
 			// read CHR-ROM
-			this.chrRom = new byte[8 * 1024 * numberOfPrgRomBanks];
+			this.chrRom = new byte[8 * 1024 * numberOfChrRomBanks];
 			if (in.read(chrRom) != chrRom.length) {
 				throw new CartridgeFileFormatException("unexpected EOF in CHR-ROM contents");
 			}
