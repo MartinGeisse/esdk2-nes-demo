@@ -9,25 +9,21 @@ import name.martingeisse.esdk2.demo.nes.model.CartridgeFileContents;
 /**
  *
  */
-public final class PpuBusHandler implements BusHandler {
+public class CpuBusHandler implements BusHandler {
 
 	private final CartridgeFileContents cartridgeFileContents;
 
-	public PpuBusHandler(CartridgeFileContents cartridgeFileContents) {
-		if (cartridgeFileContents == null) {
-			throw new IllegalArgumentException("cartridgeFileContents cannot be null");
-		}
+	public CpuBusHandler(CartridgeFileContents cartridgeFileContents) {
 		this.cartridgeFileContents = cartridgeFileContents;
 	}
 
 	@Override
 	public byte read(int address) {
 		address = address & 0xffff;
-		if (address < 0x2000) {
-			return cartridgeFileContents.readChrRom(address);
+		if (address < 0x8000) {
+			return 0; // TODO
 		} else {
-			// TODO
-			return 0;
+			return cartridgeFileContents.readPrgRom(address & 0x7fff);
 		}
 	}
 

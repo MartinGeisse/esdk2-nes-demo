@@ -18,45 +18,23 @@ import java.io.File;
 /**
  *
  */
-public class Main {
+public class TestMain {
 
 	public static void main(String[] args) throws Exception {
 
-		Launcher launcher = new Launcher(args);
-		launcher.setScreenWidth(Constants.SCREEN_WIDTH);
-		launcher.setScreenHeight(Constants.SCREEN_HEIGHT);
-		launcher.startup();
-
 		CartridgeFileContents cartridgeFileContents = new CartridgeFileContents(new File("/Users/martin/test.nes"));
-		SequentialNesModel model = new SequentialNesModel(cartridgeFileContents);
-
-		while (true) {
-
-			// draw
-			model.render();
-
-			// OS-related housekeeping
-			GL11.glFlush();
-			Display.update();
-			Display.processMessages();
-			Mouse.poll();
-			Keyboard.poll();
-
-			// allow to exit by pressing escape
-			if (Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)) {
-				break;
+		for (int i = 0; i < 32768; i++) {
+			if (i % 8 == 0) {
+				String s = "0000" + Integer.toHexString(i);
+				System.out.println();
+				System.out.print(s.substring(s.length() - 4) + ": ");
 			}
-
-			// game logic
-			for (int i = 0; i < 100; i++) {
-				model.step();
+			{
+				String s = "00" + Integer.toHexString(cartridgeFileContents.readPrgRom(i));
+				System.out.print(s.substring(s.length() - 2) + " ");
 			}
-			break; // TODO remove
-
 		}
-
-		launcher.shutdown();
-		System.exit(0);
+		System.out.println();
 
 	}
 
