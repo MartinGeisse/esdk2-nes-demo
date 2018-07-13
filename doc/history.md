@@ -15,3 +15,5 @@ Added temporary WIP versions of NES and 6502 docs.
 Made the test pixel work. The problem was the inverted Y axis in OpenGL screen coordinates.
 
 Added the NES system palette and managed to show the pattern table (from a CHR-ROM) on screen.
+
+CPU uses reset vector and fetches first instruction bytes correctly.
