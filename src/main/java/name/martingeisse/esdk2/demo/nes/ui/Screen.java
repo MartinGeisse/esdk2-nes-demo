@@ -5,6 +5,7 @@
 package name.martingeisse.esdk2.demo.nes.ui;
 
 import name.martingeisse.esdk2.demo.nes.model.Constants;
+import name.martingeisse.esdk2.demo.nes.system.GlUtil;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL14;
@@ -28,7 +29,8 @@ public class Screen {
 
 	public void render() {
 		GL14.glWindowPos2i(0, 0);
-		GL11.glDrawPixels(Constants.SCREEN_WIDTH, Constants.SCREEN_HEIGHT, GL11.GL_RGB, GL12.GL_UNSIGNED_INT_8_8_8_8, buffer);
+		GL11.glDrawPixels(Constants.SCREEN_WIDTH, Constants.SCREEN_HEIGHT, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8, buffer);
+		GlUtil.checkError();
 	}
 
 }

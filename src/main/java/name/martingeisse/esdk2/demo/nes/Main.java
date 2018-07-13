@@ -20,8 +20,8 @@ public class Main {
 	public static void main(String[] args) throws Exception {
 
 		Launcher launcher = new Launcher(args);
-		launcher.setScreenWidth(Constants.SCREEN_WIDTH);
-		launcher.setScreenHeight(Constants.SCREEN_HEIGHT);
+		launcher.setScreenWidth(Constants.SCREEN_WIDTH + 100);
+		launcher.setScreenHeight(Constants.SCREEN_HEIGHT + 100);
 		launcher.startup();
 
 		Screen screen = new Screen();
