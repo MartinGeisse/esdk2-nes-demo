@@ -4,13 +4,16 @@
  */
 package name.martingeisse.esdk2.demo.nes;
 
+import name.martingeisse.esdk2.demo.nes.model.CartridgeFileContents;
 import name.martingeisse.esdk2.demo.nes.model.Constants;
+import name.martingeisse.esdk2.demo.nes.model.sequential.SequentialNesModel;
 import name.martingeisse.esdk2.demo.nes.system.Launcher;
-import name.martingeisse.esdk2.demo.nes.ui.Screen;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL11;
+
+import java.io.File;
 
 /**
  *
@@ -24,13 +27,13 @@ public class Main {
 		launcher.setScreenHeight(Constants.SCREEN_HEIGHT + 100);
 		launcher.startup();
 
-		Screen screen = new Screen();
-		screen.setPixel(10, 10, 0xffffffff);
+		CartridgeFileContents cartridgeFileContents = new CartridgeFileContents(new File("~/test.nes"));
+		SequentialNesModel model = new SequentialNesModel(cartridgeFileContents);
 
 		while (true) {
 
 			// draw
-			screen.render();
+			model.render();
 
 			// OS-related housekeeping
 			GL11.glFlush();
@@ -45,7 +48,9 @@ public class Main {
 			}
 
 			// game logic
-			// TODO game logic
+			for (int i = 0; i < 10_000; i++) {
+				model.step();
+			}
 
 		}
 

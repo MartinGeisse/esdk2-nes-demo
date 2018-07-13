@@ -63,5 +63,18 @@ public final class CartridgeFileContents {
 		}
 	}
 
+	public byte readPrgRom(int address) {
+		if (address < 0 || address >= prgRom.length) {
+			return 0;
+		}
+		return prgRom[address];
+	}
+
+	public byte readChrRom(int address) {
+		if (address < 0 || address >= chrRom.length) {
+			return 0;
+		}
+		return chrRom[address];
+	}
 
 }
