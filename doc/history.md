@@ -7,6 +7,9 @@ The simulator GUI window opens, but drawing a test pixel doesn't work yet.
 
 # Day 2
 
-Added cartridge file loader; stub for sequential CPU model; temporary WIP versions of NES and 6502 docs.
+Added cartridge file loader.
+Added stub for sequential CPU model.
+Added stub for sequential PPU model.
+Added temporary WIP versions of NES and 6502 docs.
 
 Made the test pixel work. The problem was the inverted Y axis in OpenGL screen coordinates.
