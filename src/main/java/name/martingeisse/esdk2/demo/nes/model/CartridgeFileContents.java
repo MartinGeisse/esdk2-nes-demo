@@ -5,7 +5,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 /**
- *
+ * This class only supports the NROM "mapper" (which actually means no mapper at all), using exactly 2 PRG-ROM banks
+ * (using the whole PRG ROM address space without any mapping), exactly 1 CHR-ROM bank (using exactly the address space
+ * for pattern tables, without any mapping and disabling the internal pattern RAM), and no save-RAM.
  */
 public final class CartridgeFileContents {
 
@@ -41,6 +43,9 @@ public final class CartridgeFileContents {
 			if (mapperNumber != 0) {
 				throw new CartridgeFileFormatException("ROM mappers not supported");
 			}
+			if (numberOfPrgRomBanks != 2 || numberOfChrRomBanks != 1 || numberOfRamBanks != 0) {
+				throw new CartridgeFileFormatException("this version only supports 2 PRG banks / 1 CHR bank / 0 RAM banks");
+			}
 
 			// read trainer if present
 			if ((controlByte1 & 2) != 0) {
@@ -70,17 +75,11 @@ public final class CartridgeFileContents {
 	}
 
 	public byte readPrgRom(int address) {
-		if (address < 0 || address >= prgRom.length) {
-			return 0;
-		}
-		return prgRom[address];
+		return prgRom[address & 0x7FFF];
 	}
 
 	public byte readChrRom(int address) {
-		if (address < 0 || address >= chrRom.length) {
-			return 0;
-		}
-		return chrRom[address];
+		return chrRom[address & 0x1FFF];
 	}
 
 }

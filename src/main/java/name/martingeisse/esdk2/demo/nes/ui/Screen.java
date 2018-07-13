@@ -24,7 +24,7 @@ public class Screen {
 		if (x < 0 || x >= Constants.SCREEN_WIDTH || y < 0 || y >= Constants.SCREEN_HEIGHT) {
 			throw new IllegalArgumentException("position outside screen bounds: " + x + ", " + y);
 		}
-		buffer.put(y * Constants.SCREEN_WIDTH + x, rgb);
+		buffer.put((Constants.SCREEN_HEIGHT - 1 - y) * Constants.SCREEN_WIDTH + x, rgb);
 	}
 
 	public void render() {
