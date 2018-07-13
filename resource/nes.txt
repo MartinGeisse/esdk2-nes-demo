@@ -1,0 +1,69 @@
+
+anders als 6502:
+- kein BCD
+
+little endian
+
+overflow flag: "signed carry"
+
+borrow ::= !carry
+
+---------------------------------------------------------------------------
+
+Flags:
+
+7 N = negative
+6 V = overflow
+5 _ = _
+4 B = break command
+3 D = decimal mode
+2 I = interrupt disable
+1 Z = zero
+0 C = carry (9th bit in shift)
+
+Carry: affected by ADC, ASL, CLC, CMP, CPX, CPY, LSR, PLP, ROL, RTI, SBC, SEC
+Zero: affected by ADC, AND, ASL, BIT, CMP, CPY, CPX, DEC, DEX, DEY, EOR, INC, INX, INY,
+	LDA, LDX, LDY, LSR, ORA, PLA, PLP, ROL, RTI, SBC, TAX, TAY, TXA, TYA
+Interrupt Disable: set by reset and interrupt. Reset by CLI, PLP;
+	return from interrupt with previosly reset. Set by SEI and cleared by CLI.
+	Afected by BRK, CLI, PLP, RTI, SEI.
+
+---------------------------------------------------------------------------
+
+
+
+LDA:
+M -> A
+ignore carry, overflow (important for multi-byte add!)
+assign zero, negative
+
+STA:
+A -> M
+ignore all flags
+
+ADC:
+A + M + C -> A
+assign carry
+set overflow to (whether sign changed)
+assign negative
+assign zero
+
+SBC:
+A - M - !C -> A
+assign carry = (result >= 0)
+assign overflow to (result outside -127..127)
+assign negative
+assign zero
+
+AND: A & M -> A; assign zero, negative
+ORA: A | M -> A; assign zero, negative
+EOR: A ^ M -> A; assign zero, negative
+
+SEC: set carry
+CLC: clear carry
+
+SEI: set interrupt disable
+CLI: clear interrupt disable
+
+SED: set decimal mode
+CLD: clear decimal mode
