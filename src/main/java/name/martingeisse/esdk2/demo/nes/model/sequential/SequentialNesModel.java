@@ -10,6 +10,7 @@ public class SequentialNesModel {
 
 	private final CartridgeFileContents cartridgeFileContents;
 	private final Screen screen = new Screen();
+	private final Ppu ppu = new Ppu(null, screen);
 
 	public SequentialNesModel(CartridgeFileContents cartridgeFileContents) {
 		this.cartridgeFileContents = cartridgeFileContents;
@@ -20,6 +21,7 @@ public class SequentialNesModel {
 	}
 
 	public void render() {
+		ppu.draw();
 		screen.render();
 	}
 

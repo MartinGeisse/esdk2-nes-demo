@@ -13,8 +13,16 @@ public final class Constants {
 	private Constants() {
 	}
 
-	public static final int SCREEN_WIDTH = 256;
+	public static final int NAME_TABLE_WIDTH = 32;
 
-	public static final int SCREEN_HEIGHT = 240;
+	public static final int NAME_TABLE_HEIGHT = 30;
+
+	public static final int TILE_WIDTH = 8;
+
+	public static final int TILE_HEIGHT = 8;
+
+	public static final int SCREEN_WIDTH = NAME_TABLE_WIDTH * TILE_WIDTH;
+
+	public static final int SCREEN_HEIGHT = NAME_TABLE_HEIGHT * TILE_HEIGHT;
 
 }
