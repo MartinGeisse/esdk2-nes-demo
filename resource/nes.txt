@@ -27,6 +27,19 @@ Zero: affected by ADC, AND, ASL, BIT, CMP, CPY, CPX, DEC, DEX, DEY, EOR, INC, IN
 Interrupt Disable: set by reset and interrupt. Reset by CLI, PLP;
 	return from interrupt with previosly reset. Set by SEI and cleared by CLI.
 	Afected by BRK, CLI, PLP, RTI, SEI.
+Break Command: Set by BRK; used in interrupt service routine to detect that
+unused (_) -> reads 1
+(signed) Overflow: 0. Assigned by ADC and SBC. Set to the value of bit 6 by
+	the BIT instruction. Affected by ADC, BIT, CLV, PLP, RTI, SBC.
+	6502: A cpu pin can be used to set the overflow flag. Seems like this pin is not
+	present in the NES.
+	Overflow logic (add): adding opposite sign never overflows. Adding same sign
+	must produce a result with the same sign, otherwise there is an overflow.
+Negative: Assign to bit 7 of the result in:
+	ADC, AND, ASL, BIT, CMP, CPY, CPX, DEC, DEX, DEY, EOR, INC, INX, INY,
+	LDA, LDX, LDY, LSR, ORA, PLA, PLP, ROL, BIT, SBC, TAX, TAY,
+	TSX, TXA, TYA
+
 
 ---------------------------------------------------------------------------
 
@@ -67,3 +80,5 @@ CLI: clear interrupt disable
 
 SED: set decimal mode
 CLD: clear decimal mode
+
+CLV: clear overflow flag
