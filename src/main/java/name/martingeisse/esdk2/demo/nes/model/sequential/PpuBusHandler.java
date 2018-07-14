@@ -12,6 +12,8 @@ import name.martingeisse.esdk2.demo.nes.model.CartridgeFileContents;
 public final class PpuBusHandler implements BusHandler {
 
 	private final CartridgeFileContents cartridgeFileContents;
+	private final byte[] nametableRam = new byte[0x1000];
+	private final byte[] paletteRam = new byte[32];
 
 	public PpuBusHandler(CartridgeFileContents cartridgeFileContents) {
 		if (cartridgeFileContents == null) {
@@ -22,18 +24,28 @@ public final class PpuBusHandler implements BusHandler {
 
 	@Override
 	public byte read(int address) {
-		address = address & 0xffff;
+		address = address & 0x3fff;
 		if (address < 0x2000) {
 			return cartridgeFileContents.readChrRom(address);
+		} else if (address < 0x3f00) {
+			// TODO mirroring
+			return nametableRam[address & 0x03ff];
 		} else {
-			// TODO
-			return 0;
+			return paletteRam[address & 31];
 		}
 	}
 
 	@Override
 	public void write(int address, byte data) {
-		// TODO
+		address = address & 0x3fff;
+		if (address < 0x2000) {
+			// ignore -- it's a ROM
+		} else if (address < 0x3f00) {
+			// TODO mirroring
+			nametableRam[address & 0x03ff] = data;
+		} else {
+			paletteRam[address & 31] = data;
+		}
 	}
 
 }
