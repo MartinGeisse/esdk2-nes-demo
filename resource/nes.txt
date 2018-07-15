@@ -40,6 +40,99 @@ Negative: Assign to bit 7 of the result in:
 	LDA, LDX, LDY, LSR, ORA, PLA, PLP, ROL, BIT, SBC, TAX, TAY,
 	TSX, TXA, TYA
 
+---------------------------------------------------------------------------
+
+Addressing modes:
+
+implied: no address bytes necessary; (all locations inside CPU ?). Example: A -> X
+- implied 2-cycle instructions:
+	1. fetch opcode
+	2. decode; fetch next byte, but don't increment PC because decoding says no further bytes needed
+	3. execute; fetch next opcode (this time for real)
+	4. store result (?1); decode
+
+immediate: operand value is next byte after opcode
+	1. fetch opcode
+	2. decode; fetch operand value
+	3. execute; fetch next opcode (this time for real)
+	4. store result (?1); decode
+
+absolute: two address bytes in literal form after opcode indicate where the operand is stored
+	reading-mode (e.g. ADC):
+		1. fetch opcode
+		2. decode; fetch adr l
+		3. fetch adr h
+		4. fetch data
+		5. execute; fetch next opcode
+		6. store result; update flags; decode next opcode
+	writing-mode (e.g. STA):
+		1. fetch opcode
+		2. decode; fetch adr l
+		3. fetch adr h
+		4. store data
+		5. fetch next opcode
+		6. update flags; decode next opcode
+	jump (JMP):
+		1. fetch opcode
+		2. decode; fetch adr l
+		3. fetch adr h; update PC
+		4. fetch next opcode from jump target
+		5. update flags; decode next opcode
+
+zero page: same as absolute, but upper 8 bits are always 0
+	reading-mode:
+		1. fetch opcode
+		2. decode; fetch adr h
+		3. fetch data
+		4. execute; fetch next opcode
+		5. store result; update flags; decode next opcode
+
+relative: branch only; PC gets incremented to next instruction before computing target, then add relative signed offset
+
+indexed: absolute plus index register (X or Y) or zero-page plus index register
+	- don't know yet whether address plus index register has to stay in the same page
+	- don't know yet whether zero page plus index register has to stay in zero page
+
+?1: Maybe "execute" already means to store the result!
+
+---------------------------------------------------------------------------
+
+Timing:
+
+"2-byte instrruction in 2 cycles, 3-byte instruction in 3 cycles" -- wo bleibt da die Ausführung? Wenn eine
+Instruction 3 Bytes lang ist, z.B. LDA absolute, dann braucht es doch schon 3 cycles um diese zu laden und noch mal
+einen cycle, um den Wert nach A zu laden. Angeblich Pipelining, aber das Laden von A kann doch nicht gleichzeitig
+mit dem Laden der nächsten Instruction passieren, da ist doch der Bus schon beschäftigt.
+
+Es wird aber auf eine 2-Teilige 2-phase clock hingewiesen (heißt das 2 oder 4 Einzelschritte?) und evtl. ist da der
+Trick dahinter.
+
+"A clock cycle is defined as 1 complete operation of each of the 2 phase clocks. The major point
+to be noted is that every clock cycle is a memory cycle in which memory is either
+read or written."
+
+-> die obige Aussage stimmt einfach nicht. Eine 3-Byte-Instruction braucht *4* cycles!
+
+1. fetch opcode
+2. decode opcode; fetch adr l // nach Decode ist klar, ob dieser Fetch wirklich passieren soll. Er passiert auf jeden
+	Fall, aber der PC wird nur hochgezählt, wenn auch weitere Bytes nötig sind.
+3. fetch adr h
+4. fetch data
+5. add A + data / fetch opcode
+6. store A; update flags / decode opcode; fetch further bytes; inc PC if further bytes actually needed
+
+Branch-Befehle checken die Flags im Cacle *nach* dem Decode:
+
+1. execute previous instruction; fetch branch opcode
+2. store previous result; update flags; decode branch; fetch offset
+3. dehck flags; compute new PC; update PC if flags okay; fetch opcode after branch
+4. not taken: decode; fetch operand byte 1 // taken: store PC; fetch opcode using new PC
+
+If crossing a page boundary, 1 extra cycle is used to update PCHbefore fetching the new opcode (a fetch is done using
+the wrong PCH, but the result is discarded).
+
+Adding signed offet to unsigned PCL: add unsigned or subtract unsigned; relevant flag is C (carry or borrow)
+-> not taken = 2 cycles, taken in same page = 3 cycles; taken to neighbor page = 4 cycles
 
 ---------------------------------------------------------------------------
 
@@ -82,3 +175,31 @@ SED: set decimal mode
 CLD: clear decimal mode
 
 CLV: clear overflow flag
+
+JMP x (absolute): [PC0 + 1] -> NEW_PCL, [PC0 + 2] -> NEW_PCH, NEW_PC -> PC
+JMP x (absolute indirect): [PC0 + 1] -> NEW_PCL, [PC0 + 2] -> NEW_PCH,
+	vermutlich: [NEW_PC] -> PC
+	affects no flags
+
+Branches:
+- nur relative addressing (1 byte, 2s complement signed)
+- relativ zum Befehl nach dem Branch
+- ändert keine Flags oder sonstige Register außer PC
+BMI: branch if N set ("branch on result minus")
+BPL: branch if N clear ("branch on result plus")
+BCC: branch if C clear
+BCS: branch if C set
+BEQ: branch if Z set
+BNE: branch if Z reset
+BVS: branch if V set
+BVC: branch if V clear
+
+CMP: wie SUB, nur A und V wird nicht assigned; und dass es SUB ja gar nicht wirklich gibt, nur SBC, und CMP ignoriert C
+	A - M -> _
+	assign Z, N, C
+	does not assign V
+
+BIT: wie AND, nur A wird nicht assigned und N, V werden anhand des 2. Operanden, nicht anhand des Ergebnisses gesetzt!
+		(bei AND wird V gar nicht gesetzt)
+	A & M -> _
+	assign N (bit 7 of M -- not A&M), V (bit 6 of M -- not A&M), Z (alle bits von A&M = 0)
