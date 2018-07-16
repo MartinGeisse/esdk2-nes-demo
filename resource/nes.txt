@@ -270,6 +270,12 @@ DEX, DEY: X - 1 -> X; Y - 1 -> Y
 	assigns N, Z
 	does not assign C, V (!!!)
 
+CPX, CPY: X - M; Y - M
+	assigns N (result bit 7), Z (result = 0), C (X >= M)
+	does not assign V
 
+TAX, TXA, TAY, TYA: A <-> X, Y
+	assigns N, Z
+	does not assign C, V
 
 
