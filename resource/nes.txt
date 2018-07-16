@@ -113,6 +113,34 @@ zero page indexed: one address bytes plus X or Y, wraparound to zero page
         4. fetch data
         5. fetch opcode; store result
 
+indirect: ist immer indexed indirect oder indirect indexed, nie einfach nur indirect
+	Lesart: die Reihenfolge der Wörter ist die Reihenfolge der Operationen.
+	Die Operationen sind NICHT wie Mathematische Operatoren, die nach rechts wirken!
+	indexed indirect:
+		IAL := [PC + 1]
+		operand := [[IAL + X], [IAL + X + 1]]
+		(wraparound bei IAL + X (+1) unklar)
+		cycles:
+		1. fetch opcode
+		2. decode; fetch IAL
+		3. fetch discarded; add IAL + X (wraparound -- stays in zero page)
+		4. fetch ADL; add (IAL + X) + 1 (wraparound -- stays in zero page)
+		5. fetch ADH
+		6. fetch data
+		7. execute; fetch opcode
+		8. store result; decode
+	indirect indexed:
+		IAL := [PC + 1]
+		operand := [[IAL, IAL + 1] + X]
+		cycles:
+		1. fetch opcode
+		2. decode; fetch IAL
+		3. fetch BAL; add IAL + 1 (wrapround? unclear)
+		4. fetch BAH; add BAL + X (page crossing allowed)
+		4b. add carry 1 to BAH if needed; fetch dummy data
+		5. fetch data
+		6. execute; fetch opcode
+		7. store result; decode
 
 
 
@@ -226,3 +254,22 @@ BIT: wie AND, nur A wird nicht assigned und N, V werden anhand des 2. Operanden,
 		(bei AND wird V gar nicht gesetzt)
 	A & M -> _
 	assign N (bit 7 of M -- not A&M), V (bit 6 of M -- not A&M), Z (alle bits von A&M = 0)
+
+LDX, LDY: M -> X, M -> Y
+	assigns N, Z
+	does not assign C, V
+
+STX, STY: X -> M, Y -> M
+	does not assign any flags
+
+INX, INY: X + 1 -> X; Y + 1 -> Y
+	assigns N, Z
+	does not assign C, V (!!!)
+
+DEX, DEY: X - 1 -> X; Y - 1 -> Y
+	assigns N, Z
+	does not assign C, V (!!!)
+
+
+
+
