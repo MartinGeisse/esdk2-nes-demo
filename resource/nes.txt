@@ -89,9 +89,32 @@ zero page: same as absolute, but upper 8 bits are always 0
 
 relative: branch only; PC gets incremented to next instruction before computing target, then add relative signed offset
 
-indexed: absolute plus index register (X or Y) or zero-page plus index register
+* alle indexed: absolute plus index register (X or Y) or zero-page plus index register
+    - geschrieben: LDA $1234, X
 	- don't know yet whether address plus index register has to stay in the same page
 	- don't know yet whether zero page plus index register has to stay in zero page
+
+absolute indexed: two address bytes plus X or Y
+    LDA adr, X
+        1. fetch opcode
+        2. decode; fetch adr L
+        3. fetch adr H; compute L + X
+        -  if crossing page boundary, insert cycle to add carry to adr H
+            in this cycle, data gets fetched using the wrong address
+            suppressed for writes (how? probably turned into reads)
+        4. fetch data
+        5. fetch opcode; store result
+
+zero page indexed: one address bytes plus X or Y, wraparound to zero page
+    LDA adr, X
+        1. fetch opcode
+        2. decode; fetch adr L
+        3. compute L + X, ignore carry -> wraparound, fetch wrong data
+        4. fetch data
+        5. fetch opcode; store result
+
+
+
 
 ?1: Maybe "execute" already means to store the result!
 
