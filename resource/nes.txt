@@ -1,4 +1,12 @@
 
+Eigene Ideen:
+- ein Accumulator-basierter Prozessor braucht *unbedingt* ein
+    "load relative to base pointer / stack pointer". Ansonsten
+    ist der Zugriff auf Funktionsparameter echt mies.
+    Im 6502 sollte das aber mit TSX möglich sein
+
+---------------------------------------------------------------------------
+
 anders als 6502:
 - kein BCD
 
@@ -187,6 +195,16 @@ Adding signed offet to unsigned PCL: add unsigned or subtract unsigned; relevant
 
 ---------------------------------------------------------------------------
 
+Stack:
+
+SP zeigt immer auf den nächsten freien Eintrag. Erster eintrag ist 0x01ff.
+
+Stack ist immer im Bereich 0x0100 - 0x01ff
+
+Return-Adressen werden (erst H, dann L) gepusht. Dadurch stehen sie im Speicher in Little-Endian.
+
+---------------------------------------------------------------------------
+
 
 
 LDA:
@@ -277,5 +295,60 @@ CPX, CPY: X - M; Y - M
 TAX, TXA, TAY, TYA: A <-> X, Y
 	assigns N, Z
 	does not assign C, V
+
+JSR: push PC+2 (push high first, low second), [PC + 1] -> PCL, [PC + 2] -> PCH
+    Speichert die Adresse des letzten JSR-Bytes (NICHT des Folgebefehls?)
+    assigns no flags
+    cycles:
+    1. fetch opcode; inc PC
+    2. decode; fetch ADL; inc PC
+    3. store ADL
+    4. push PCH
+    5. push PCL
+    6. fetch ADH
+    7. update PC; fetch new opcode
+
+RTS: pull() + 1 -> PC
+    assigns no flags
+    cycles:
+    1. fetch opcode
+    2. decode; fetch dummy
+    3. fetch dummy; inc SP
+    4. fetch PCL; inc SP
+    5. fetch PCH
+    6. fetch dummy; inc PC
+    7. fetch opcode
+
+PHA: push A
+    assigns no flags
+    cycles:
+    1. fetch opcode; inc PC
+    2. decode; fetch dummy; hold PC
+    3. push A; dec SP
+    4. fetch opcode
+
+PLA: pull A
+    assigns N, Z
+    does not assign C, V
+    cycles:
+    1. fetch opcode; inc PC
+    2. decode; fetch dummy; hold PC
+    3. read dummy from stack; inc PC
+    4. read value from stack
+    5. fetch opcode; assign A; assign flags
+
+TXS: X -> S
+    assigns no flags
+
+TSX: S -> X
+    assigns N, Z
+    does not assign C, V
+
+PHP: Push Processor Status
+    assigns no registers
+
+PLP: Pull Processor Status
+    assigns all flags by pulling them
+
 
 
