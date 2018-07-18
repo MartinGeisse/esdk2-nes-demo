@@ -205,6 +205,38 @@ Return-Adressen werden (erst H, dann L) gepusht. Dadurch stehen sie im Speicher 
 
 ---------------------------------------------------------------------------
 
+Interrupts:
+
+0xfffa - 0xfffb: NMI vector
+0xfffc - 0xfffd: reset vector
+0xfffe - 0xffff: interrupt vector
+
+reset cycles:
+sets interrupt disable bit
+1 ---
+2 ---
+3 load 0x0100 + SP          pseudo interrupt entry, but suppress write signal
+4 load 0x0100 + SP - 1      ...
+5 load 0x0100 + SP - 2      ...
+6 fetch PCL from vector
+7 fetch PCH from vector
+8 fetch first opcode
+
+interrupt cycles:
+1. fetch interrupted instruction opcode; finish previous instruction; hold PC
+2. fetch dummy; hold PC; force BRK
+3. push PCH; dec SP
+4. push PCL; dec SP
+5. push P; dec SP
+6. fetch vector low; set I
+7. fetch vector high to PCH; assign PCL
+8. assign PCH; fetch opcode
+
+
+
+
+---------------------------------------------------------------------------
+
 
 
 LDA:
@@ -245,9 +277,8 @@ CLD: clear decimal mode
 
 CLV: clear overflow flag
 
-JMP x (absolute): [PC0 + 1] -> NEW_PCL, [PC0 + 2] -> NEW_PCH, NEW_PC -> PC
-JMP x (absolute indirect): [PC0 + 1] -> NEW_PCL, [PC0 + 2] -> NEW_PCH,
-	vermutlich: [NEW_PC] -> PC
+JMP x (absolute): [PC + 1] -> NEW_PCL, [PC + 2] -> NEW_PCH, NEW_PC -> PC
+JMP x (absolute indirect): [PC + 1] -> IAL, [PC + 2] -> IAH, [IAL, IAH] -> PCL, [IAL + 1, IAH] -> PCH
 	affects no flags
 
 Branches:
@@ -350,5 +381,17 @@ PHP: Push Processor Status
 PLP: Pull Processor Status
     assigns all flags by pulling them
 
+RTI: pull P, pull PC
+cycles:
+1. fetch opcode
+2. decode; fetch dummy
+3. fetch dummy; inc SP
+4. pull P; inc SP
+5. pull PCL; inc SP
+6. pull PCH; assign PCL
+7. fetch opcode; assign PCH; inc PC
 
-
+BRK: Cause Interrupt
+    stores PC + 2 on stack (?)
+    stores P, but with the B bit set to 1, on the stack (does not set the B bit in P?)
+    does not assign any flags (really? what about setting the I flag?)
