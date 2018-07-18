@@ -38,772 +38,459 @@ public final class Cpu {
 		System.out.println(Integer.toHexString(opcode & 0xff));
 		switch (opcode) {
 
-			case 0x00:
+			case 0x00: // BRK
 				throw new RuntimeException();
 
-			case 0x01:
+			case 0x01: // ORA - (indirect, X)
 				throw new RuntimeException();
 
-			case 0x02:
+			case 0x05: // ORA - zero page
 				throw new RuntimeException();
 
-			case 0x03:
+			case 0x06: // ASL - zero page
 				throw new RuntimeException();
 
-			case 0x04:
+			case 0x08: // PHP
 				throw new RuntimeException();
 
-			case 0x05:
+			case 0x09: // ORA - immediate
 				throw new RuntimeException();
 
-			case 0x06:
+			case 0x0a: // ASL - accumulator
 				throw new RuntimeException();
 
-			case 0x07:
+			case 0x0d: // ORA - absolute
 				throw new RuntimeException();
 
-			case 0x08:
+			case 0x0e: // ASL - absolute
 				throw new RuntimeException();
 
-			case 0x09:
+			case 0x10: // BPL
 				throw new RuntimeException();
 
-			case 0x0a:
+			case 0x11: // ORA - (indirect), Y
 				throw new RuntimeException();
 
-			case 0x0b:
+			case 0x15: // ORA - zero page, X
 				throw new RuntimeException();
 
-			case 0x0c:
+			case 0x16: // ASL - zero page, X
 				throw new RuntimeException();
 
-			case 0x0d:
+			case 0x18: // CLC
 				throw new RuntimeException();
 
-			case 0x0e:
+			case 0x19: // ORA - absolute, Y
 				throw new RuntimeException();
 
-			case 0x0f:
+			case 0x1d: // ORA, absolute, X
 				throw new RuntimeException();
 
-			case 0x10:
+			case 0x1e: // ASL - absolute, X
 				throw new RuntimeException();
 
-			case 0x11:
+			case 0x20: // JSR
 				throw new RuntimeException();
 
-			case 0x12:
+			case 0x21: // AND - (indirect, X)
 				throw new RuntimeException();
 
-			case 0x13:
+			case 0x24: // BIT - zero page
 				throw new RuntimeException();
 
-			case 0x14:
+			case 0x25: // AND - zero page
 				throw new RuntimeException();
 
-			case 0x15:
+			case 0x26: // ROL - zero page
 				throw new RuntimeException();
 
-			case 0x16:
+			case 0x28: // PLP
 				throw new RuntimeException();
 
-			case 0x17:
+			case 0x29: // AND - immediate
 				throw new RuntimeException();
 
-			case 0x18:
+			case 0x2a: // ROL - accumulator
 				throw new RuntimeException();
 
-			case 0x19:
+			case 0x2c: // BIT - absolute
 				throw new RuntimeException();
 
-			case 0x1a:
+			case 0x2d: // AND - absolute
 				throw new RuntimeException();
 
-			case 0x1b:
+			case 0x2e: // ROL - absolute
 				throw new RuntimeException();
 
-			case 0x1c:
+			case 0x30: // BMI
 				throw new RuntimeException();
 
-			case 0x1d:
+			case 0x31: // AND - (indirect), Y
 				throw new RuntimeException();
 
-			case 0x1e:
+			case 0x35: // AND - zero page, X
 				throw new RuntimeException();
 
-			case 0x1f:
+			case 0x36: // ROL - zero page, X
 				throw new RuntimeException();
 
-			case 0x20:
+			case 0x38: // SEC
 				throw new RuntimeException();
 
-			case 0x21:
+			case 0x39: // AND - absolute, Y
 				throw new RuntimeException();
 
-			case 0x22:
+			case 0x3d: // AND - absolute, X
 				throw new RuntimeException();
 
-			case 0x23:
+			case 0x3e: // ROL - absolute, X
 				throw new RuntimeException();
 
-			case 0x24:
+			case 0x40: // RTI
 				throw new RuntimeException();
 
-			case 0x25:
+			case 0x41: // EOR - (indirect, X)
 				throw new RuntimeException();
 
-			case 0x26:
+			case 0x45: // EOR - zero page
 				throw new RuntimeException();
 
-			case 0x27:
+			case 0x46: // LSR - zero page
 				throw new RuntimeException();
 
-			case 0x28:
+			case 0x48: // PHA
 				throw new RuntimeException();
 
-			case 0x29:
+			case 0x49: // EOR - immediate
 				throw new RuntimeException();
 
-			case 0x2a:
+			case 0x4a: // LSR - accumulator
 				throw new RuntimeException();
 
-			case 0x2b:
+			case 0x4c: // JMP - absolute
 				throw new RuntimeException();
 
-			case 0x2c:
+			case 0x4d: // EOR - absolute
 				throw new RuntimeException();
 
-			case 0x2d:
+			case 0x4e: // LSR - absolute
 				throw new RuntimeException();
 
-			case 0x2e:
+			case 0x50: // BVC
 				throw new RuntimeException();
 
-			case 0x2f:
+			case 0x51: // EOR - (indirect), Y
 				throw new RuntimeException();
 
-			case 0x30:
+			case 0x55: // EOR - zero page, X
 				throw new RuntimeException();
 
-			case 0x31:
+			case 0x56: // LSR - zero page, X
 				throw new RuntimeException();
 
-			case 0x32:
+			case 0x58: // CLI
 				throw new RuntimeException();
 
-			case 0x33:
+			case 0x59: // EOR - absolute, Y
 				throw new RuntimeException();
 
-			case 0x34:
+			case 0x5d: // EOR - absolute, X
 				throw new RuntimeException();
 
-			case 0x35:
+			case 0x5e: // LSR - absolute, X
 				throw new RuntimeException();
 
-			case 0x36:
+			case 0x60: // RTS
 				throw new RuntimeException();
 
-			case 0x37:
+			case 0x61: // ADC - (indirect, X)
 				throw new RuntimeException();
 
-			case 0x38:
+			case 0x65: // ADC - zero page
 				throw new RuntimeException();
 
-			case 0x39:
+			case 0x66: // ROR - zero page
 				throw new RuntimeException();
 
-			case 0x3a:
+			case 0x68: // PLA
 				throw new RuntimeException();
 
-			case 0x3b:
+			case 0x69: // ADC - immediate
 				throw new RuntimeException();
 
-			case 0x3c:
+			case 0x6a: // ROR - accumulator
 				throw new RuntimeException();
 
-			case 0x3d:
+			case 0x6c: // JMP - indirect
 				throw new RuntimeException();
 
-			case 0x3e:
+			case 0x6d: // ADC - absolute
 				throw new RuntimeException();
 
-			case 0x3f:
+			case 0x6e: // ROR - absolute
 				throw new RuntimeException();
 
-			case 0x40:
+			case 0x70: // BVS
 				throw new RuntimeException();
 
-			case 0x41:
+			case 0x71: // ADC - (indirect), Y
 				throw new RuntimeException();
 
-			case 0x42:
+			case 0x75: // ADC - zero page, X
 				throw new RuntimeException();
 
-			case 0x43:
+			case 0x76: // ROR - zero page, X
 				throw new RuntimeException();
 
-			case 0x44:
+			case 0x78: // SEI
 				throw new RuntimeException();
 
-			case 0x45:
+			case 0x79: // ADC - absolute, Y
 				throw new RuntimeException();
 
-			case 0x46:
+			case 0x7d: // ADC - absolute, X
 				throw new RuntimeException();
 
-			case 0x47:
+			case 0x7e: // ROR - absolute, X
 				throw new RuntimeException();
 
-			case 0x48:
+			case 0x81: // STA - (indirect, X)
 				throw new RuntimeException();
 
-			case 0x49:
+			case 0x84: // STY - zero page
 				throw new RuntimeException();
 
-			case 0x4a:
+			case 0x85: // STA - zero page
 				throw new RuntimeException();
 
-			case 0x4b:
+			case 0x86: // STX - zero page
 				throw new RuntimeException();
 
-			case 0x4c:
+			case 0x88: // DEY
 				throw new RuntimeException();
 
-			case 0x4d:
+			case 0x8a: // TXA
 				throw new RuntimeException();
 
-			case 0x4e:
+			case 0x8c: // STY - absolute
 				throw new RuntimeException();
 
-			case 0x4f:
+			case 0x8d: // STA - absolute
 				throw new RuntimeException();
 
-			case 0x50:
+			case 0x8e: // STX - absolute
 				throw new RuntimeException();
 
-			case 0x51:
+			case 0x90: // BCC
 				throw new RuntimeException();
 
-			case 0x52:
+			case 0x91: // STA - (indirect), Y
 				throw new RuntimeException();
 
-			case 0x53:
+			case 0x94: // STY - zero page, X
 				throw new RuntimeException();
 
-			case 0x54:
+			case 0x95: // STA - zero page, X
 				throw new RuntimeException();
 
-			case 0x55:
+			case 0x96: // STX - zero page, Y
 				throw new RuntimeException();
 
-			case 0x56:
+			case 0x98: // TYA
 				throw new RuntimeException();
 
-			case 0x57:
+			case 0x99: // STA - absolute, Y
 				throw new RuntimeException();
 
-			case 0x58:
+			case 0x9a: // TXS
 				throw new RuntimeException();
 
-			case 0x59:
+			case 0x9d: // STA - absolute, X
 				throw new RuntimeException();
 
-			case 0x5a:
+			case 0xa0: // LDY - immediate
 				throw new RuntimeException();
 
-			case 0x5b:
+			case 0xa1: // LDA - (indirect, X)
 				throw new RuntimeException();
 
-			case 0x5c:
+			case 0xa2: // LDX - immediate
 				throw new RuntimeException();
 
-			case 0x5d:
+			case 0xa4: // LDY - zero page
 				throw new RuntimeException();
 
-			case 0x5e:
+			case 0xa5: // LDA - zero page
 				throw new RuntimeException();
 
-			case 0x5f:
+			case 0xa6: // LDX - zero page
 				throw new RuntimeException();
 
-			case 0x60:
+			case 0xa8: // TAY
 				throw new RuntimeException();
 
-			case 0x61:
+			case 0xa9: // LDA - immediate
 				throw new RuntimeException();
 
-			case 0x62:
+			case 0xaa: // TAX
 				throw new RuntimeException();
 
-			case 0x63:
+			case 0xac: // LDY - absolute
 				throw new RuntimeException();
 
-			case 0x64:
+			case 0xad: // LDA - absolute
 				throw new RuntimeException();
 
-			case 0x65:
+			case 0xae: // LDX - absolute
 				throw new RuntimeException();
 
-			case 0x66:
+			case 0xb0: // BCS
 				throw new RuntimeException();
 
-			case 0x67:
+			case 0xb1: // LDA - (indirect), Y
 				throw new RuntimeException();
 
-			case 0x68:
+			case 0xb4: // LDY - zero page, X
 				throw new RuntimeException();
 
-			case 0x69:
+			case 0xb5: // LDA - zero page, X
 				throw new RuntimeException();
 
-			case 0x6a:
+			case 0xb6: // LDX - zero page, Y
 				throw new RuntimeException();
 
-			case 0x6b:
+			case 0xb8: // CLV
 				throw new RuntimeException();
 
-			case 0x6c:
+			case 0xb9: // LDA - absolute, Y
 				throw new RuntimeException();
 
-			case 0x6d:
+			case 0xba: // TSX
 				throw new RuntimeException();
 
-			case 0x6e:
+			case 0xbc: // LDY - absolute, X
 				throw new RuntimeException();
 
-			case 0x6f:
+			case 0xbd: // LDA - absolute, X
 				throw new RuntimeException();
 
-			case 0x70:
+			case 0xbe: // LDX - absolute, Y
 				throw new RuntimeException();
 
-			case 0x71:
+			case 0xc0: // CPY - immediate
 				throw new RuntimeException();
 
-			case 0x72:
+			case 0xc1: // CMP - (indirect, X)
 				throw new RuntimeException();
 
-			case 0x73:
+			case 0xc4: // CPY - zero page
 				throw new RuntimeException();
 
-			case 0x74:
+			case 0xc5: // CMP - zero page
 				throw new RuntimeException();
 
-			case 0x75:
+			case 0xc6: // DEC - zero page
 				throw new RuntimeException();
 
-			case 0x76:
+			case 0xc8: // INY
 				throw new RuntimeException();
 
-			case 0x77:
+			case 0xc9: // CMP - immediate
 				throw new RuntimeException();
 
-			case 0x78:
-				throw new RuntimeException();
-
-			case 0x79:
-				throw new RuntimeException();
-
-			case 0x7a:
-				throw new RuntimeException();
-
-			case 0x7b:
-				throw new RuntimeException();
-
-			case 0x7c:
-				throw new RuntimeException();
-
-			case 0x7d:
-				throw new RuntimeException();
-
-			case 0x7e:
-				throw new RuntimeException();
-
-			case 0x7f:
-				throw new RuntimeException();
-
-			case 0x80:
-				throw new RuntimeException();
-
-			case 0x81:
-				throw new RuntimeException();
-
-			case 0x82:
-				throw new RuntimeException();
-
-			case 0x83:
-				throw new RuntimeException();
-
-			case 0x84:
-				throw new RuntimeException();
-
-			case 0x85:
-				throw new RuntimeException();
-
-			case 0x86:
-				throw new RuntimeException();
-
-			case 0x87:
-				throw new RuntimeException();
-
-			case 0x88:
-				throw new RuntimeException();
-
-			case 0x89:
-				throw new RuntimeException();
-
-			case 0x8a:
-				throw new RuntimeException();
-
-			case 0x8b:
-				throw new RuntimeException();
-
-			case 0x8c:
-				throw new RuntimeException();
-
-			case 0x8d:
-				throw new RuntimeException();
-
-			case 0x8e:
-				throw new RuntimeException();
-
-			case 0x8f:
-				throw new RuntimeException();
-
-			case 0x90:
-				throw new RuntimeException();
-
-			case 0x91:
-				throw new RuntimeException();
-
-			case 0x92:
-				throw new RuntimeException();
-
-			case 0x93:
-				throw new RuntimeException();
-
-			case 0x94:
-				throw new RuntimeException();
-
-			case 0x95:
-				throw new RuntimeException();
-
-			case 0x96:
-				throw new RuntimeException();
-
-			case 0x97:
-				throw new RuntimeException();
-
-			case 0x98:
-				throw new RuntimeException();
-
-			case 0x99:
-				throw new RuntimeException();
-
-			case 0x9a:
-				throw new RuntimeException();
-
-			case 0x9b:
-				throw new RuntimeException();
-
-			case 0x9c:
-				throw new RuntimeException();
-
-			case 0x9d:
-				throw new RuntimeException();
-
-			case 0x9e:
-				throw new RuntimeException();
-
-			case 0x9f:
-				throw new RuntimeException();
-
-			case 0xa0:
-				throw new RuntimeException();
-
-			case 0xa1:
-				throw new RuntimeException();
-
-			case 0xa2:
-				throw new RuntimeException();
-
-			case 0xa3:
-				throw new RuntimeException();
-
-			case 0xa4:
-				throw new RuntimeException();
-
-			case 0xa5:
-				throw new RuntimeException();
-
-			case 0xa6:
-				throw new RuntimeException();
-
-			case 0xa7:
-				throw new RuntimeException();
-
-			case 0xa8:
-				throw new RuntimeException();
-
-			case 0xa9:
-				throw new RuntimeException();
-
-			case 0xaa:
-				throw new RuntimeException();
-
-			case 0xab:
-				throw new RuntimeException();
-
-			case 0xac:
-				throw new RuntimeException();
-
-			case 0xad:
-				throw new RuntimeException();
-
-			case 0xae:
-				throw new RuntimeException();
-
-			case 0xaf:
-				throw new RuntimeException();
-
-			case 0xb0:
-				throw new RuntimeException();
-
-			case 0xb1:
-				throw new RuntimeException();
-
-			case 0xb2:
-				throw new RuntimeException();
-
-			case 0xb3:
-				throw new RuntimeException();
-
-			case 0xb4:
-				throw new RuntimeException();
-
-			case 0xb5:
-				throw new RuntimeException();
-
-			case 0xb6:
-				throw new RuntimeException();
-
-			case 0xb7:
-				throw new RuntimeException();
-
-			case 0xb8:
-				throw new RuntimeException();
-
-			case 0xb9:
-				throw new RuntimeException();
-
-			case 0xba:
-				throw new RuntimeException();
-
-			case 0xbb:
-				throw new RuntimeException();
-
-			case 0xbc:
-				throw new RuntimeException();
-
-			case 0xbd:
-				throw new RuntimeException();
-
-			case 0xbe:
-				throw new RuntimeException();
-
-			case 0xbf:
-				throw new RuntimeException();
-
-			case 0xc0:
-				throw new RuntimeException();
-
-			case 0xc1:
-				throw new RuntimeException();
-
-			case 0xc2:
-				throw new RuntimeException();
-
-			case 0xc3:
-				throw new RuntimeException();
-
-			case 0xc4:
-				throw new RuntimeException();
-
-			case 0xc5:
-				throw new RuntimeException();
-
-			case 0xc6:
-				throw new RuntimeException();
-
-			case 0xc7:
-				throw new RuntimeException();
-
-			case 0xc8:
-				throw new RuntimeException();
-
-			case 0xc9:
-				throw new RuntimeException();
-
-			case 0xca:
-				throw new RuntimeException();
-
-			case 0xcb:
-				throw new RuntimeException();
-
-			case 0xcc:
-				throw new RuntimeException();
-
-			case 0xcd:
-				throw new RuntimeException();
-
-			case 0xce:
-				throw new RuntimeException();
-
-			case 0xcf:
-				throw new RuntimeException();
-
-			case 0xd0:
-				throw new RuntimeException();
-
-			case 0xd1:
-				throw new RuntimeException();
-
-			case 0xd2:
-				throw new RuntimeException();
-
-			case 0xd3:
-				throw new RuntimeException();
-
-			case 0xd4:
-				throw new RuntimeException();
-
-			case 0xd5:
-				throw new RuntimeException();
-
-			case 0xd6:
-				throw new RuntimeException();
-
-			case 0xd7:
-				throw new RuntimeException();
-
-			case 0xd8:
-				throw new RuntimeException();
-
-			case 0xd9:
-				throw new RuntimeException();
-
-			case 0xda:
-				throw new RuntimeException();
-
-			case 0xdb:
-				throw new RuntimeException();
-
-			case 0xdc:
-				throw new RuntimeException();
-
-			case 0xdd:
-				throw new RuntimeException();
-
-			case 0xde:
-				throw new RuntimeException();
-
-			case 0xdf:
-				throw new RuntimeException();
-
-			case 0xe0:
-				throw new RuntimeException();
+				// TODO --- check ---
 
-			case 0xe1:
+			case 0xca: // DEX
 				throw new RuntimeException();
 
-			case 0xe2:
+			case 0xcc: // CPY - absolute
 				throw new RuntimeException();
 
-			case 0xe3:
+			case 0xcd: // CMP - absolute
 				throw new RuntimeException();
 
-			case 0xe4:
+			case 0xce: // DEC - absolute
 				throw new RuntimeException();
 
-			case 0xe5:
+			case 0xd0: // BNE
 				throw new RuntimeException();
 
-			case 0xe6:
+			case 0xd1: // CMP - (indirect), y
 				throw new RuntimeException();
 
-			case 0xe7:
+			case 0xd5: // CMP - zero page, X
 				throw new RuntimeException();
 
-			case 0xe8:
+			case 0xd6: // DEC - zero page, X
 				throw new RuntimeException();
 
-			case 0xe9:
+			case 0xd8: // CLD
 				throw new RuntimeException();
 
-			case 0xea:
+			case 0xd9: // CMP - absolute, Y
 				throw new RuntimeException();
 
-			case 0xeb:
+			case 0xdd: // CMP - absolute, X
 				throw new RuntimeException();
 
-			case 0xec:
+			case 0xde: // DEC - absolute, X
 				throw new RuntimeException();
 
-			case 0xed:
+			case 0xe0: // CPY - immediate
 				throw new RuntimeException();
 
-			case 0xee:
+			case 0xe1: // SBC - (indirect, X)
 				throw new RuntimeException();
 
-			case 0xef:
+			case 0xe4: // CPX - zero page
 				throw new RuntimeException();
 
-			case 0xf0:
+			case 0xe5: // SBC - zero page
 				throw new RuntimeException();
 
-			case 0xf1:
+			case 0xe6: // INC - zero page
 				throw new RuntimeException();
 
-			case 0xf2:
+			case 0xe8: // INX
 				throw new RuntimeException();
 
-			case 0xf3:
+			case 0xe9: // SBC - immediate
 				throw new RuntimeException();
 
-			case 0xf4:
+			case 0xea: // NOP
 				throw new RuntimeException();
 
-			case 0xf5:
+			case 0xec: // CPX - absolute
 				throw new RuntimeException();
 
-			case 0xf6:
+			case 0xed: // SBC - absolute
 				throw new RuntimeException();
 
-			case 0xf7:
+			case 0xee: // INC - absolute
 				throw new RuntimeException();
 
-			case 0xf8:
+			case 0xf0: // BEQ
 				throw new RuntimeException();
 
-			case 0xf9:
+			case 0xf1: // SBC - (indirect), Y
 				throw new RuntimeException();
 
-			case 0xfa:
+			case 0xf5: // SBC - zero page, X
 				throw new RuntimeException();
 
-			case 0xfb:
+			case 0xf6: // INC - zero page, X
 				throw new RuntimeException();
 
-			case 0xfc:
+			case 0xf8: // SED
 				throw new RuntimeException();
 
-			case 0xfd:
+			case 0xf9: // SBC - absolute, Y
 				throw new RuntimeException();
 
-			case 0xfe:
+			case 0xfd: // SBC - absolute, X
 				throw new RuntimeException();
 
-			case 0xff:
+			case 0xfe: // INC - absolute, X
 				throw new RuntimeException();
 
 			default:
