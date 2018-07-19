@@ -53,6 +53,10 @@ public final class Cpu {
 		}
 	}
 
+	private boolean getFlag(int flag) {
+		return (status & flag) != 0;
+	}
+
 	//
 	// composite helper operations
 	//
@@ -164,16 +168,38 @@ public final class Cpu {
 	// instruction execution
 	//
 
+	private String toHex(int value, int digits) {
+		String s = "00000000" + Integer.toHexString(value);
+		return s.substring(s.length() - digits);
+	}
+
 	public void step() {
+
+		{
+			System.out.print("pc=" + toHex(pc, 4) + " a=" + toHex(a, 2) + " x=" + toHex(x, 2) + " y=" + toHex(y, 2));
+			System.out.print(" sp=" + toHex(sp, 2) + " status: ");
+			String flagNames = "";
+			for (int i = 7; i >= 0; i--) {
+				if (getFlag(1 << i)) {
+					System.out.print("CZIDB-VN".charAt(i));
+				} else {
+					System.out.print('-');
+				}
+			}
+		}
+
 		int opcode = fetch();
-		System.out.println(Integer.toHexString(opcode));
+		System.out.println(" opcode=" + toHex(opcode, 2));
+
 		switch (opcode) {
 
 			case 0x00: // BRK
-				throw new UnsupportedOperationException("not yet implemented");
+				throw new UnsupportedOperationException("BRK not yet implemented");
 
 			case 0x01: // ORA - (indirect, X)
-				throw new RuntimeException();
+				a |= fetchOperandIndexedIndirect(x);
+				setNZ(a);
+				break;
 
 			case 0x05: // ORA - zero page
 				a |= read(fetchOperandAddressZeroPage());
@@ -188,13 +214,17 @@ public final class Cpu {
 				break;
 
 			case 0x09: // ORA - immediate
-				throw new RuntimeException();
+				a |= fetch();
+				setNZ(a);
+				break;
 
 			case 0x0a: // ASL - accumulator
 				throw new RuntimeException();
 
 			case 0x0d: // ORA - absolute
-				throw new RuntimeException();
+				a |= fetchOperandAbsolute();
+				setNZ(a);
+				break;
 
 			case 0x0e: // ASL - absolute
 				throw new RuntimeException();
@@ -203,10 +233,14 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x11: // ORA - (indirect), Y
-				throw new RuntimeException();
+				a |= fetchOperandIndirectIndexed(y);
+				setNZ(a);
+				break;
 
 			case 0x15: // ORA - zero page, X
-				throw new RuntimeException();
+				a |= fetchOperandZeroPageIndexed(x);
+				setNZ(a);
+				break;
 
 			case 0x16: // ASL - zero page, X
 				throw new RuntimeException();
@@ -216,10 +250,14 @@ public final class Cpu {
 				break;
 
 			case 0x19: // ORA - absolute, Y
-				throw new RuntimeException();
+				a |= fetchOperandIndexed(y);
+				setNZ(a);
+				break;
 
 			case 0x1d: // ORA, absolute, X
-				throw new RuntimeException();
+				a |= fetchOperandIndexed(x);
+				setNZ(a);
+				break;
 
 			case 0x1e: // ASL - absolute, X
 				throw new RuntimeException();
@@ -228,13 +266,17 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x21: // AND - (indirect, X)
-				throw new RuntimeException();
+				a &= fetchOperandIndexedIndirect(x);
+				setNZ(a);
+				break;
 
 			case 0x24: // BIT - zero page
 				throw new RuntimeException();
 
 			case 0x25: // AND - zero page
-				throw new RuntimeException();
+				a &= fetchOperandZeroPage();
+				setNZ(a);
+				break;
 
 			case 0x26: // ROL - zero page
 				throw new RuntimeException();
@@ -244,7 +286,9 @@ public final class Cpu {
 				break;
 
 			case 0x29: // AND - immediate
-				throw new RuntimeException();
+				a &= fetch();
+				setNZ(a);
+				break;
 
 			case 0x2a: // ROL - accumulator
 				throw new RuntimeException();
@@ -253,7 +297,9 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x2d: // AND - absolute
-				throw new RuntimeException();
+				a &= fetchOperandAbsolute();
+				setNZ(a);
+				break;
 
 			case 0x2e: // ROL - absolute
 				throw new RuntimeException();
@@ -262,10 +308,14 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x31: // AND - (indirect), Y
-				throw new RuntimeException();
+				a &= fetchOperandIndirectIndexed(y);
+				setNZ(a);
+				break;
 
 			case 0x35: // AND - zero page, X
-				throw new RuntimeException();
+				a &= fetchOperandZeroPageIndexed(x);
+				setNZ(a);
+				break;
 
 			case 0x36: // ROL - zero page, X
 				throw new RuntimeException();
@@ -275,10 +325,14 @@ public final class Cpu {
 				break;
 
 			case 0x39: // AND - absolute, Y
-				throw new RuntimeException();
+				a &= fetchOperandIndexed(y);
+				setNZ(a);
+				break;
 
 			case 0x3d: // AND - absolute, X
-				throw new RuntimeException();
+				a &= fetchOperandIndexed(x);
+				setNZ(a);
+				break;
 
 			case 0x3e: // ROL - absolute, X
 				throw new RuntimeException();
@@ -287,10 +341,14 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x41: // EOR - (indirect, X)
-				throw new RuntimeException();
+				a ^= fetchOperandIndexedIndirect(x);
+				setNZ(a);
+				break;
 
 			case 0x45: // EOR - zero page
-				throw new RuntimeException();
+				a ^= fetchOperandZeroPage();
+				setNZ(a);
+				break;
 
 			case 0x46: // LSR - zero page
 				throw new RuntimeException();
@@ -300,16 +358,21 @@ public final class Cpu {
 				break;
 
 			case 0x49: // EOR - immediate
-				throw new RuntimeException();
+				a ^= fetch();
+				setNZ(a);
+				break;
 
 			case 0x4a: // LSR - accumulator
 				throw new RuntimeException();
 
 			case 0x4c: // JMP - absolute
-				throw new RuntimeException();
+				pc = fetchOperandAddressAbsolute();
+				break;
 
 			case 0x4d: // EOR - absolute
-				throw new RuntimeException();
+				a ^= fetchOperandAbsolute();
+				setNZ(a);
+				break;
 
 			case 0x4e: // LSR - absolute
 				throw new RuntimeException();
@@ -318,10 +381,14 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x51: // EOR - (indirect), Y
-				throw new RuntimeException();
+				a ^= fetchOperandIndirectIndexed(y);
+				setNZ(a);
+				break;
 
 			case 0x55: // EOR - zero page, X
-				throw new RuntimeException();
+				a ^= fetchOperandZeroPageIndexed(x);
+				setNZ(a);
+				break;
 
 			case 0x56: // LSR - zero page, X
 				throw new RuntimeException();
@@ -331,10 +398,14 @@ public final class Cpu {
 				break;
 
 			case 0x59: // EOR - absolute, Y
-				throw new RuntimeException();
+				a ^= fetchOperandIndexed(y);
+				setNZ(a);
+				break;
 
 			case 0x5d: // EOR - absolute, X
-				throw new RuntimeException();
+				a ^= fetchOperandIndexed(x);
+				setNZ(a);
+				break;
 
 			case 0x5e: // LSR - absolute, X
 				throw new RuntimeException();
@@ -366,7 +437,8 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x6c: // JMP - indirect
-				throw new RuntimeException();
+				pc = fetchOperandAddressIndexedIndirect(0);
+				break;
 
 			case 0x6d: // ADC - absolute
 				executeAdc(fetchOperandAbsolute());
@@ -405,16 +477,20 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x81: // STA - (indirect, X)
-				throw new RuntimeException();
+				write(fetchOperandAddressIndexedIndirect(x), a);
+				break;
 
 			case 0x84: // STY - zero page
-				throw new RuntimeException();
+				write(fetchOperandAddressZeroPage(), x);
+				break;
 
 			case 0x85: // STA - zero page
-				throw new RuntimeException();
+				write(fetchOperandAddressZeroPage(), a);
+				break;
 
 			case 0x86: // STX - zero page
-				throw new RuntimeException();
+				write(fetchOperandAddressZeroPage(), x);
+				break;
 
 			case 0x88: // DEY
 				y = (y - 1) & 0xff;
@@ -422,113 +498,170 @@ public final class Cpu {
 				break;
 
 			case 0x8a: // TXA
-				throw new RuntimeException();
+				a = x;
+				setNZ(a);
+				break;
 
 			case 0x8c: // STY - absolute
-				throw new RuntimeException();
+				write(fetchOperandAddressAbsolute(), x);
+				break;
 
 			case 0x8d: // STA - absolute
-				throw new RuntimeException();
+				write(fetchOperandAddressAbsolute(), a);
+				break;
 
 			case 0x8e: // STX - absolute
-				throw new RuntimeException();
+				write(fetchOperandAddressAbsolute(), x);
+				break;
 
 			case 0x90: // BCC
 				throw new RuntimeException();
 
 			case 0x91: // STA - (indirect), Y
-				throw new RuntimeException();
+				write(fetchOperandAddressIndirectIndexed(y), a);
+				break;
 
 			case 0x94: // STY - zero page, X
-				throw new RuntimeException();
+				write(fetchOperandAddressIndexed(x), x);
+				break;
 
 			case 0x95: // STA - zero page, X
-				throw new RuntimeException();
+				write(fetchOperandAddressZeroPageIndexed(x), a);
+				break;
 
 			case 0x96: // STX - zero page, Y
-				throw new RuntimeException();
+				write(fetchOperandAddressIndexed(y), x);
+				break;
 
 			case 0x98: // TYA
-				throw new RuntimeException();
+				a = y;
+				setNZ(a);
+				break;
 
 			case 0x99: // STA - absolute, Y
-				throw new RuntimeException();
+				write(fetchOperandAddressIndexed(y), a);
+				break;
 
 			case 0x9a: // TXS
-				throw new RuntimeException();
+				sp = x;
+				// does not affect flags for some reason
+				break;
 
 			case 0x9d: // STA - absolute, X
-				throw new RuntimeException();
+				write(fetchOperandAddressIndexed(x), a);
+				break;
 
 			case 0xa0: // LDY - immediate
-				throw new RuntimeException();
+				y = fetch();
+				setNZ(y);
+				break;
 
 			case 0xa1: // LDA - (indirect, X)
-				throw new RuntimeException();
+				a = fetchOperandIndexedIndirect(x);
+				setNZ(a);
+				break;
 
 			case 0xa2: // LDX - immediate
-				throw new RuntimeException();
+				x = fetch();
+				setNZ(x);
+				break;
 
 			case 0xa4: // LDY - zero page
-				throw new RuntimeException();
+				y = fetchOperandZeroPage();
+				setNZ(y);
+				break;
 
 			case 0xa5: // LDA - zero page
-				throw new RuntimeException();
+				a = fetchOperandZeroPage();
+				setNZ(a);
+				break;
 
 			case 0xa6: // LDX - zero page
-				throw new RuntimeException();
+				x = fetchOperandZeroPage();
+				setNZ(x);
+				break;
 
 			case 0xa8: // TAY
-				throw new RuntimeException();
+				y = a;
+				setNZ(y);
+				break;
 
 			case 0xa9: // LDA - immediate
-				throw new RuntimeException();
+				a = fetch();
+				setNZ(a);
+				break;
 
 			case 0xaa: // TAX
-				throw new RuntimeException();
+				x = a;
+				setNZ(x);
+				break;
 
 			case 0xac: // LDY - absolute
-				throw new RuntimeException();
+				y = fetchOperandAbsolute();
+				setNZ(y);
+				break;
 
 			case 0xad: // LDA - absolute
-				throw new RuntimeException();
+				a = fetchOperandAbsolute();
+				setNZ(a);
+				break;
 
 			case 0xae: // LDX - absolute
-				throw new RuntimeException();
+				x = fetchOperandAbsolute();
+				setNZ(x);
+				break;
 
 			case 0xb0: // BCS
 				throw new RuntimeException();
 
 			case 0xb1: // LDA - (indirect), Y
-				throw new RuntimeException();
+				a = fetchOperandIndirectIndexed(y);
+				setNZ(a);
+				break;
 
 			case 0xb4: // LDY - zero page, X
-				throw new RuntimeException();
+				y = fetchOperandZeroPageIndexed(x);
+				setNZ(y);
+				break;
 
 			case 0xb5: // LDA - zero page, X
-				throw new RuntimeException();
+				a = fetchOperandZeroPageIndexed(x);
+				setNZ(a);
+				break;
 
 			case 0xb6: // LDX - zero page, Y
-				throw new RuntimeException();
+				x = fetchOperandZeroPageIndexed(y);
+				setNZ(x);
+				break;
 
 			case 0xb8: // CLV
 				clearFlag(FLAG_OVERFLOW);
 				break;
 
 			case 0xb9: // LDA - absolute, Y
-				throw new RuntimeException();
+				a = fetchOperandIndexed(y);
+				setNZ(a);
+				break;
 
 			case 0xba: // TSX
-				throw new RuntimeException();
+				sp = x;
+				setNZ(sp);
+				break;
 
 			case 0xbc: // LDY - absolute, X
-				throw new RuntimeException();
+				y = fetchOperandIndexed(x);
+				setNZ(y);
+				break;
 
 			case 0xbd: // LDA - absolute, X
-				throw new RuntimeException();
+				a = fetchOperandIndexed(x);
+				setNZ(a);
+				break;
 
 			case 0xbe: // LDX - absolute, Y
-				throw new RuntimeException();
+				x = fetchOperandIndexed(y);
+				setNZ(x);
+				break;
 
 			case 0xc0: // CPY - immediate
 				throw new RuntimeException();
@@ -543,7 +676,13 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0xc6: // DEC - zero page
-				throw new RuntimeException();
+			{
+				int address = fetchOperandAddressZeroPage();
+				int newValue = (read(address) - 1) & 0xff;
+				setNZ(newValue);
+				write(address, newValue);
+				break;
+			}
 
 			case 0xc8: // INY
 				y = (y + 1) & 0xff;
@@ -565,7 +704,13 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0xce: // DEC - absolute
-				throw new RuntimeException();
+			{
+				int address = fetchOperandAddressAbsolute();
+				int newValue = (read(address) - 1) & 0xff;
+				setNZ(newValue);
+				write(address, newValue);
+				break;
+			}
 
 			case 0xd0: // BNE
 				throw new RuntimeException();
@@ -577,7 +722,13 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0xd6: // DEC - zero page, X
-				throw new RuntimeException();
+			{
+				int address = fetchOperandAddressZeroPageIndexed(x);
+				int newValue = (read(address) - 1) & 0xff;
+				setNZ(newValue);
+				write(address, newValue);
+				break;
+			}
 
 			case 0xd8: // CLD
 				clearFlag(FLAG_DECIMAL);
@@ -590,7 +741,13 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0xde: // DEC - absolute, X
-				throw new RuntimeException();
+			{
+				int address = fetchOperandAddressIndexed(x);
+				int newValue = (read(address) - 1) & 0xff;
+				setNZ(newValue);
+				write(address, newValue);
+				break;
+			}
 
 			case 0xe0: // CPX - immediate
 				throw new RuntimeException();
@@ -607,7 +764,13 @@ public final class Cpu {
 				break;
 
 			case 0xe6: // INC - zero page
-				throw new RuntimeException();
+			{
+				int address = fetchOperandAddressZeroPage();
+				int newValue = (read(address) + 1) & 0xff;
+				setNZ(newValue);
+				write(address, newValue);
+				break;
+			}
 
 			case 0xe8: // INX
 				x = (x + 1) & 0xff;
@@ -629,7 +792,13 @@ public final class Cpu {
 				break;
 
 			case 0xee: // INC - absolute
-				throw new RuntimeException();
+			{
+				int address = fetchOperandAddressAbsolute();
+				int newValue = (read(address) + 1) & 0xff;
+				setNZ(newValue);
+				write(address, newValue);
+				break;
+			}
 
 			case 0xf0: // BEQ
 				throw new RuntimeException();
@@ -643,7 +812,13 @@ public final class Cpu {
 				break;
 
 			case 0xf6: // INC - zero page, X
-				throw new RuntimeException();
+			{
+				int address = fetchOperandAddressZeroPageIndexed(x);
+				int newValue = (read(address) + 1) & 0xff;
+				setNZ(newValue);
+				write(address, newValue);
+				break;
+			}
 
 			case 0xf8: // SED
 				setFlag(FLAG_DECIMAL);
@@ -658,7 +833,13 @@ public final class Cpu {
 				break;
 
 			case 0xfe: // INC - absolute, X
-				throw new RuntimeException();
+			{
+				int address = fetchOperandAddressIndexed(x);
+				int newValue = (read(address) + 1) & 0xff;
+				setNZ(newValue);
+				write(address, newValue);
+				break;
+			}
 
 			default:
 				throw new RuntimeException("unknown opcode: " + opcode);
@@ -669,13 +850,13 @@ public final class Cpu {
 	private void executeAdc(int operand) {
 		int a2 = a + operand;
 		setFlag(FLAG_CARRY, a2 > 255);
-		setFlag(FLAG_OVERFLOW, );
+		// TODO setFlag(FLAG_OVERFLOW, );
 		a = a2 & 0xff;
 		setNZ(a);
 	}
 
 	private void executeSbc(int operand) {
-
+		// TODO
 	}
 
 }
