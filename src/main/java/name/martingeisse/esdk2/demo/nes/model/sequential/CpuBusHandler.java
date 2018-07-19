@@ -9,7 +9,7 @@ import name.martingeisse.esdk2.demo.nes.model.CartridgeFileContents;
 /**
  *
  */
-public class CpuBusHandler implements BusHandler {
+public abstract class CpuBusHandler implements BusHandler {
 
 	private final CartridgeFileContents cartridgeFileContents;
 	private final byte[] ram = new byte[0x800];
@@ -26,12 +26,10 @@ public class CpuBusHandler implements BusHandler {
 			return ram[address & 0x07ff];
 		} else if (address < 0x4000) {
 			// I/O registers
-			// TODO
-			return 0;
+			return readIo2(address);
 		} else if (address < 0x4020) {
 			// I/O registers
-			// TODO
-			return 0;
+			return readIo4(address);
 		} else if (address < 0x8000) {
 			// unused (could be used for save RAM and expansion ROM)
 			return 0;
@@ -49,14 +47,19 @@ public class CpuBusHandler implements BusHandler {
 			ram[address & 0x07ff] = data;
 		} else if (address < 0x4000) {
 			// I/O registers
-			// TODO
+			writeIo2(address, data);
 		} else if (address < 0x4020) {
 			// I/O registers
-			// TODO
+			writeIo4(address, data);
 		} else {
 			// Addresses < 0x8000 are unused (could be used for save RAM and expansion ROM); above that is the
 			// PRG ROM (cannot write to that)
 		}
 	}
+
+	protected abstract byte readIo2(int address);
+	protected abstract void writeIo2(int address, byte data);
+	protected abstract byte readIo4(int address);
+	protected abstract void writeIo4(int address, byte data);
 
 }

@@ -32,9 +32,6 @@ public class Main {
 
 		while (true) {
 
-			// draw
-			model.render();
-
 			// OS-related housekeeping
 			GL11.glFlush();
 			Display.update();
@@ -47,9 +44,9 @@ public class Main {
 				break;
 			}
 
-			// game logic
+			// simulation
 			for (int i = 0; i < 100; i++) {
-				model.step();
+				model.frame();
 			}
 			break; // TODO remove
 

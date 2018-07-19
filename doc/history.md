@@ -31,4 +31,9 @@ Read CPU docs over and over again.
 
 Start implementing a sequential CPU model.
 
+# Day 9
+
+Continued implementing CPU instructions; added PPU control / mask / status register stubs so my test ROM
+gets some code executed without errors.
+
  

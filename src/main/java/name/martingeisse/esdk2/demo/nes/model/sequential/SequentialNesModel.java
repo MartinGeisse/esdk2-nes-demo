@@ -23,21 +23,84 @@ public class SequentialNesModel {
 		}
 		this.cartridgeFileContents = cartridgeFileContents;
 
-		this.cpuBusHandler = new CpuBusHandler(cartridgeFileContents);
+		this.cpuBusHandler = new CpuBusHandler(cartridgeFileContents) {
+
+			@Override
+			protected byte readIo2(int address) {
+				switch (address & 7) {
+
+					case 2:
+						return (byte) ppu.getStatusRegister();
+
+					default:
+						return 0;
+
+				}
+			}
+
+			@Override
+			protected void writeIo2(int address, byte data) {
+				switch (address & 7) {
+
+					case 0:
+						ppu.setControlRegister(data & 0xff);
+						break;
+
+					case 1:
+						ppu.setMaskRegister(data & 0xff);
+						break;
+
+				}
+			}
+
+			@Override
+			protected byte readIo4(int address) {
+				return 0;
+			}
+
+			@Override
+			protected void writeIo4(int address, byte data) {
+
+			}
+
+		};
 		this.cpu = new Cpu(cpuBusHandler);
 
 		this.screen = new Screen();
 		this.ppuBusHandler = new PpuBusHandler(cartridgeFileContents);
-		this.ppu = new Ppu(ppuBusHandler, screen);
+		this.ppu = new Ppu(ppuBusHandler, screen, cpu::fireNmi);
 	}
 
-	public void step() {
-		cpu.step();
-	}
+	public void frame() {
 
-	public void render() {
-		ppu.draw();
+		// simulate 240 displayed rows and draw them
+		for (int y = 0; y < 240; y++) {
+			row();
+			ppu.drawRow(y);
+		}
+
+		// simulate 22 v-blank lines and one pre-render line, drawing nothing
+		ppu.setVblank(true);
+		rows(22);
+		ppu.setVblank(false);
+		row();
+
+		// display the rendered screen
 		screen.render();
+
+	}
+
+	private void rows(int n) {
+		while (n > 0) {
+			row();
+			n--;
+		}
+	}
+
+	private void row() {
+		for (int i = 0; i < 100; i++) {
+			cpu.step();
+		}
 	}
 
 }

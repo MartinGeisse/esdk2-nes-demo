@@ -157,11 +157,20 @@ public final class Cpu {
 	}
 
 	public void fireNmi() {
-		// TODO
+		push(pc >> 8);
+		push(pc & 0xff);
+		push(status);
+		pc = read16(Constants.NMI_VECTOR_LOCATION);
+		setFlag(FLAG_INTERRUPT_DISABLE);
 	}
 
+	// note: does not obey the I flag
 	public void fireIrq() {
-		// TODO
+		push(pc >> 8);
+		push(pc & 0xff);
+		push(status);
+		pc = read16(Constants.INTERRUPT_VECTOR_LOCATION);
+		setFlag(FLAG_INTERRUPT_DISABLE);
 	}
 
 	//
@@ -175,7 +184,8 @@ public final class Cpu {
 
 	public void step() {
 
-		{
+		boolean debug = (pc > 0x800d);
+		if (debug) {
 			System.out.print("pc=" + toHex(pc, 4) + " a=" + toHex(a, 2) + " x=" + toHex(x, 2) + " y=" + toHex(y, 2));
 			System.out.print(" sp=" + toHex(sp, 2) + " status: ");
 			String flagNames = "";
@@ -189,7 +199,9 @@ public final class Cpu {
 		}
 
 		int opcode = fetch();
-		System.out.println(" opcode=" + toHex(opcode, 2));
+		if (debug) {
+			System.out.println(" opcode=" + toHex(opcode, 2));
+		}
 
 		switch (opcode) {
 
@@ -230,7 +242,8 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x10: // BPL
-				throw new RuntimeException();
+				fetchAndExecuteBranch(!getFlag(FLAG_NEGATIVE));
+				break;
 
 			case 0x11: // ORA - (indirect), Y
 				a |= fetchOperandIndirectIndexed(y);
@@ -305,7 +318,8 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x30: // BMI
-				throw new RuntimeException();
+				fetchAndExecuteBranch(getFlag(FLAG_NEGATIVE));
+				break;
 
 			case 0x31: // AND - (indirect), Y
 				a &= fetchOperandIndirectIndexed(y);
@@ -378,7 +392,8 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x50: // BVC
-				throw new RuntimeException();
+				fetchAndExecuteBranch(!getFlag(FLAG_OVERFLOW));
+				break;
 
 			case 0x51: // EOR - (indirect), Y
 				a ^= fetchOperandIndirectIndexed(y);
@@ -448,7 +463,8 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x70: // BVS
-				throw new RuntimeException();
+				fetchAndExecuteBranch(getFlag(FLAG_OVERFLOW));
+				break;
 
 			case 0x71: // ADC - (indirect), Y
 				executeAdc(fetchOperandIndirectIndexed(y));
@@ -515,7 +531,8 @@ public final class Cpu {
 				break;
 
 			case 0x90: // BCC
-				throw new RuntimeException();
+				fetchAndExecuteBranch(!getFlag(FLAG_CARRY));
+				break;
 
 			case 0x91: // STA - (indirect), Y
 				write(fetchOperandAddressIndirectIndexed(y), a);
@@ -612,7 +629,8 @@ public final class Cpu {
 				break;
 
 			case 0xb0: // BCS
-				throw new RuntimeException();
+				fetchAndExecuteBranch(getFlag(FLAG_CARRY));
+				break;
 
 			case 0xb1: // LDA - (indirect), Y
 				a = fetchOperandIndirectIndexed(y);
@@ -713,7 +731,8 @@ public final class Cpu {
 			}
 
 			case 0xd0: // BNE
-				throw new RuntimeException();
+				fetchAndExecuteBranch(!getFlag(FLAG_ZERO));
+				break;
 
 			case 0xd1: // CMP - (indirect), y
 				throw new RuntimeException();
@@ -801,7 +820,8 @@ public final class Cpu {
 			}
 
 			case 0xf0: // BEQ
-				throw new RuntimeException();
+				fetchAndExecuteBranch(getFlag(FLAG_ZERO));
+				break;
 
 			case 0xf1: // SBC - (indirect), Y
 				executeSbc(fetchOperandIndirectIndexed(y));
@@ -857,6 +877,13 @@ public final class Cpu {
 
 	private void executeSbc(int operand) {
 		// TODO
+	}
+
+	private void fetchAndExecuteBranch(boolean condition) {
+		int offset = (byte)fetch();
+		if (condition) {
+			pc += offset;
+		}
 	}
 
 }

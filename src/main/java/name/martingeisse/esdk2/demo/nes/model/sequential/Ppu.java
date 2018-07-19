@@ -83,8 +83,13 @@ public class Ppu {
 	};
 	private final BusHandler busHandler;
 	private final Screen screen;
+	private final Runnable vblankEdgeCallback;
+	private boolean vblank = false;
+	private int controlRegister = 0;
+	private int maskRegister = 0;
+	private int previousWriteValue = 0;
 
-	public Ppu(BusHandler busHandler, Screen screen) {
+	public Ppu(BusHandler busHandler, Screen screen, Runnable vblankEdgeCallback) {
 		if (busHandler == null) {
 			throw new IllegalArgumentException("busHandler cannot be null");
 		}
@@ -93,38 +98,59 @@ public class Ppu {
 		}
 		this.busHandler = busHandler;
 		this.screen = screen;
+		this.vblankEdgeCallback = vblankEdgeCallback;
 	}
 
-	public void draw() {
+	public void drawRow(int row) {
+		int tileY = row >> 3;
+		int pixelY = row & 7;
 		for (int tileX = 0; tileX < Constants.NAME_TABLE_WIDTH; tileX++) {
-			for (int tileY = 0; tileY < Constants.NAME_TABLE_HEIGHT; tileY++) {
 
-				// test -- should actually read from name table here
-				int tileCode = (tileY * 32 + tileX) & 0xFF;
+			// test -- should actually read from name table here
+			int tileCode = (tileY * 32 + tileX) & 0xFF;
 
-				// test -- should come from a configuration register
-				int patternBaseAddress = 0x1000 * ((tileY >> 3) & 1);
+			// test -- should come from a configuration register
+			int patternBaseAddress = 0x1000 * ((tileY >> 3) & 1);
 
-				for (int pixelX = 0; pixelX < Constants.TILE_WIDTH; pixelX++) {
-					for (int pixelY = 0; pixelY < Constants.TILE_HEIGHT; pixelY++) {
+			for (int pixelX = 0; pixelX < Constants.TILE_WIDTH; pixelX++) {
 
-						// read from pattern table
-						int patternLine1 = busHandler.read(patternBaseAddress + (tileCode << 4) + (pixelY << 1));
-						int patternLine2 = busHandler.read(patternBaseAddress + (tileCode << 4) + (pixelY << 1) + 1);
-						int columnMask = (128 >> pixelX);
-						int lowTwoColorIndexBits = ((patternLine1 & columnMask) != 0 ? 2 : 0) +
-							((patternLine2 & columnMask) != 0 ? 1 : 0);
-						// TODO use upper two bits from attribute table
-						int localColorIndex = lowTwoColorIndexBits;
-						// TODO read color from nackground palette
-						int globalColorIndex = localColorIndex;
-						int color = systemPalette[globalColorIndex];
+				// read from pattern table
+				int patternLine1 = busHandler.read(patternBaseAddress + (tileCode << 4) + (pixelY << 1));
+				int patternLine2 = busHandler.read(patternBaseAddress + (tileCode << 4) + (pixelY << 1) + 1);
+				int columnMask = (128 >> pixelX);
+				int lowTwoColorIndexBits = ((patternLine1 & columnMask) != 0 ? 2 : 0) +
+					((patternLine2 & columnMask) != 0 ? 1 : 0);
+				// TODO use upper two bits from attribute table
+				int localColorIndex = lowTwoColorIndexBits;
+				// TODO read color from nackground palette
+				int globalColorIndex = localColorIndex;
+				int color = systemPalette[globalColorIndex];
 
-						screen.setPixel(tileX * Constants.TILE_WIDTH + pixelX, tileY * Constants.TILE_HEIGHT + pixelY, color);
-					}
-				}
+				screen.setPixel(tileX * Constants.TILE_WIDTH + pixelX, tileY * Constants.TILE_HEIGHT + pixelY, color);
+
 			}
 		}
+	}
+
+	public void setVblank(boolean vblank) {
+		if (vblank && !this.vblank) {
+			if ((controlRegister & 128) != 0 && vblankEdgeCallback != null) {
+				vblankEdgeCallback.run();
+			}
+		}
+		this.vblank = vblank;
+	}
+
+	public void setControlRegister(int controlRegister) {
+		this.previousWriteValue = this.controlRegister = controlRegister;
+	}
+
+	public void setMaskRegister(int maskRegister) {
+		this.previousWriteValue = this.maskRegister = maskRegister;
+	}
+
+	public int getStatusRegister() {
+		return (previousWriteValue & 31) | (vblank ? 128 : 0);
 	}
 
 }
