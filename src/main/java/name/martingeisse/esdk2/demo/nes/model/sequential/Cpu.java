@@ -7,21 +7,154 @@ import name.martingeisse.esdk2.demo.nes.model.Constants;
  */
 public final class Cpu {
 
+	public static final int FLAG_NEGATIVE = 128;
+	public static final int FLAG_OVERFLOW = 64;
+	public static final int FLAG_BREAK = 16;
+	public static final int FLAG_DECIMAL = 8;
+	public static final int FLAG_INTERRUPT_DISABLE = 4;
+	public static final int FLAG_ZERO = 2;
+	public static final int FLAG_CARRY = 1;
+
 	private final BusHandler busHandler;
 
-	private byte a, x, y, p;
-	private short pc, sp;
+	private byte a, x, y, status, sp;
+	private short pc;
 
 	public Cpu(BusHandler busHandler) {
 		this.busHandler = busHandler;
 		reset();
 	}
 
+	//
+	// primitive operations
+	//
+
+	private byte read(int address) {
+		return busHandler.read(address);
+	}
+
+	private void write(int address, byte data) {
+		busHandler.write(address, data);
+	}
+
+	private void setFlag(int flag) {
+		status |= flag;
+	}
+
+	private void clearFlag(int flag) {
+		status &= ~flag;
+	}
+
+	private void setFlag(int flag, boolean value) {
+		if (value) {
+			setFlag(flag);
+		} else {
+			clearFlag(flag);
+		}
+	}
+
+	//
+	// composite helper operations
+	//
+
+	private short read16(int address) {
+		int lowByte = read(address);
+		int highByte = read(address + 1);
+		return (short) ((lowByte & 0xff) + (highByte & 0xff) << 8);
+	}
+
+	private byte fetch() {
+		byte data = read(pc);
+		pc++;
+		return data;
+	}
+
+	private short fetch16() {
+		short result = read16(pc);
+		pc += 2;
+		return result;
+	}
+
+	private int fetchOperandAddressAbsolute() {
+		return fetch16() & 0xffff;
+	}
+
+	private byte fetchOperandAbsolute() {
+		return read(fetchOperandAddressAbsolute());
+	}
+
+	private int fetchOperandAddressZeroPage() {
+		return fetch() & 0xff;
+	}
+
+	private byte fetchOperandZeroPage() {
+		return read(fetchOperandAddressZeroPage());
+	}
+
+	private int fetchOperandAddressIndexed(byte index) {
+		return fetchOperandAddressAbsolute() + (index & 0xff);
+	}
+
+	private byte fetchOperandIndexed(byte index) {
+		return read(fetchOperandAddressIndexed(index));
+	}
+
+	private int fetchOperandAddressZeroPageIndexed(byte index) {
+		// stays in zero page -- wraparound!
+		return (fetch() + index) & 0xff;
+	}
+
+	private byte fetchOperandZeroPageIndexed(byte index) {
+		return read(fetchOperandAddressZeroPageIndexed(index));
+	}
+
+	private int fetchOperandAddressIndirectIndexed(byte index) {
+		int pointerAddress = fetch() & 0xff;
+		int pointer = read16(pointerAddress) & 0xffff;
+		return pointer + index;
+	}
+
+	private byte fetchOperandIndirectIndexed(byte index) {
+		return read(fetchOperandAddressIndirectIndexed(index));
+	}
+
+	private int fetchOperandAddressIndexedIndirect(byte index) {
+		int pointerAddress = (fetch() + index) & 0xff; // wraparound!
+		return read16(pointerAddress) & 0xffff;
+	}
+
+	private byte fetchOperandIndexedIndirect(byte index) {
+		return read(fetchOperandAddressIndexedIndirect(index));
+	}
+
+	private void setNZ(byte from) {
+		setFlag(FLAG_ZERO, from == 0);
+		setFlag(FLAG_NEGATIVE, from < 0);
+	}
+
+	private void push(byte data) {
+		write(getStackPointerAddress(), data);
+		sp--;
+	}
+
+	private byte pull() {
+		sp++;
+		return read(getStackPointerAddress());
+	}
+
+	private int getStackPointerAddress() {
+		return 0x100 | (sp & 0xff);
+	}
+
+	//
+	// vector handling
+	//
+
 	public void reset() {
 		a = x = y = 0;
 		pc = read16(Constants.RESET_VECTOR_LOCATION);
-		sp = (byte)0xfd;
-		p = 0x34;
+		sp = (byte) 0xfd;
+		status = 0x34;
 	}
 
 	public void fireNmi() {
@@ -32,6 +165,9 @@ public final class Cpu {
 		// TODO
 	}
 
+	//
+	// instruction execution
+	//
 
 	public void step() {
 		int opcode = fetch();
@@ -39,19 +175,22 @@ public final class Cpu {
 		switch (opcode) {
 
 			case 0x00: // BRK
-				throw new RuntimeException();
+				throw new UnsupportedOperationException("not yet implemented");
 
 			case 0x01: // ORA - (indirect, X)
 				throw new RuntimeException();
 
 			case 0x05: // ORA - zero page
-				throw new RuntimeException();
+				a |= read(fetchOperandAddressZeroPage());
+				setNZ(a);
+				break;
 
 			case 0x06: // ASL - zero page
 				throw new RuntimeException();
 
 			case 0x08: // PHP
-				throw new RuntimeException();
+				push(status);
+				break;
 
 			case 0x09: // ORA - immediate
 				throw new RuntimeException();
@@ -78,7 +217,8 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x18: // CLC
-				throw new RuntimeException();
+				clearFlag(FLAG_CARRY);
+				break;
 
 			case 0x19: // ORA - absolute, Y
 				throw new RuntimeException();
@@ -105,7 +245,8 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x28: // PLP
-				throw new RuntimeException();
+				status = pull();
+				break;
 
 			case 0x29: // AND - immediate
 				throw new RuntimeException();
@@ -135,7 +276,8 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x38: // SEC
-				throw new RuntimeException();
+				setFlag(FLAG_CARRY);
+				break;
 
 			case 0x39: // AND - absolute, Y
 				throw new RuntimeException();
@@ -159,7 +301,8 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x48: // PHA
-				throw new RuntimeException();
+				push(a);
+				break;
 
 			case 0x49: // EOR - immediate
 				throw new RuntimeException();
@@ -189,7 +332,8 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x58: // CLI
-				throw new RuntimeException();
+				clearFlag(FLAG_INTERRUPT_DISABLE);
+				break;
 
 			case 0x59: // EOR - absolute, Y
 				throw new RuntimeException();
@@ -213,7 +357,9 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x68: // PLA
-				throw new RuntimeException();
+				a = pull();
+				setNZ(a);
+				break;
 
 			case 0x69: // ADC - immediate
 				throw new RuntimeException();
@@ -243,7 +389,8 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x78: // SEI
-				throw new RuntimeException();
+				setFlag(FLAG_INTERRUPT_DISABLE);
+				break;
 
 			case 0x79: // ADC - absolute, Y
 				throw new RuntimeException();
@@ -267,7 +414,9 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x88: // DEY
-				throw new RuntimeException();
+				y--;
+				setNZ(y);
+				break;
 
 			case 0x8a: // TXA
 				throw new RuntimeException();
@@ -360,7 +509,8 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0xb8: // CLV
-				throw new RuntimeException();
+				clearFlag(FLAG_OVERFLOW);
+				break;
 
 			case 0xb9: // LDA - absolute, Y
 				throw new RuntimeException();
@@ -393,7 +543,9 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0xc8: // INY
-				throw new RuntimeException();
+				y++;
+				setNZ(y);
+				break;
 
 			case 0xc9: // CMP - immediate
 				throw new RuntimeException();
@@ -401,7 +553,9 @@ public final class Cpu {
 				// TODO --- check ---
 
 			case 0xca: // DEX
-				throw new RuntimeException();
+				x--;
+				setNZ(x);
+				break;
 
 			case 0xcc: // CPY - absolute
 				throw new RuntimeException();
@@ -425,7 +579,8 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0xd8: // CLD
-				throw new RuntimeException();
+				clearFlag(FLAG_DECIMAL);
+				break;
 
 			case 0xd9: // CMP - absolute, Y
 				throw new RuntimeException();
@@ -452,13 +607,15 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0xe8: // INX
-				throw new RuntimeException();
+				x++;
+				setNZ(x);
+				break;
 
 			case 0xe9: // SBC - immediate
 				throw new RuntimeException();
 
 			case 0xea: // NOP
-				throw new RuntimeException();
+				break;
 
 			case 0xec: // CPX - absolute
 				throw new RuntimeException();
@@ -482,7 +639,8 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0xf8: // SED
-				throw new RuntimeException();
+				setFlag(FLAG_DECIMAL);
+				break;
 
 			case 0xf9: // SBC - absolute, Y
 				throw new RuntimeException();
@@ -497,18 +655,6 @@ public final class Cpu {
 				throw new RuntimeException("unknown opcode: " + opcode);
 		}
 		// TODO
-	}
-
-	private byte fetch() {
-		byte data = busHandler.read(pc);
-		pc++;
-		return data;
-	}
-
-	private short read16(int address) {
-		int lowByte = busHandler.read(address);
-		int highByte = busHandler.read(address + 1);
-		return (short)((lowByte & 0xff) + (highByte & 0xff) << 8);
 	}
 
 }
