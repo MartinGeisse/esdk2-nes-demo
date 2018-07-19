@@ -17,8 +17,8 @@ public final class Cpu {
 
 	private final BusHandler busHandler;
 
-	private byte a, x, y, status, sp;
-	private short pc;
+	private int a, x, y, status, sp;
+	private int pc;
 
 	public Cpu(BusHandler busHandler) {
 		this.busHandler = busHandler;
@@ -29,12 +29,12 @@ public final class Cpu {
 	// primitive operations
 	//
 
-	private byte read(int address) {
-		return busHandler.read(address);
+	private int read(int address) {
+		return busHandler.read(address) & 0xff;
 	}
 
-	private void write(int address, byte data) {
-		busHandler.write(address, data);
+	private void write(int address, int data) {
+		busHandler.write(address, (byte) data);
 	}
 
 	private void setFlag(int flag) {
@@ -57,93 +57,88 @@ public final class Cpu {
 	// composite helper operations
 	//
 
-	private short read16(int address) {
-		int lowByte = read(address);
-		int highByte = read(address + 1);
-		return (short) ((lowByte & 0xff) + (highByte & 0xff) << 8);
+	private int read16(int address) {
+		return read(address) + (read(address + 1) << 8);
 	}
 
-	private byte fetch() {
-		byte data = read(pc);
+	private int fetch() {
+		int data = read(pc);
 		pc++;
 		return data;
 	}
 
-	private short fetch16() {
-		short result = read16(pc);
+	private int fetch16() {
+		int result = read16(pc);
 		pc += 2;
 		return result;
 	}
 
 	private int fetchOperandAddressAbsolute() {
-		return fetch16() & 0xffff;
+		return fetch16();
 	}
 
-	private byte fetchOperandAbsolute() {
+	private int fetchOperandAbsolute() {
 		return read(fetchOperandAddressAbsolute());
 	}
 
 	private int fetchOperandAddressZeroPage() {
-		return fetch() & 0xff;
+		return fetch();
 	}
 
-	private byte fetchOperandZeroPage() {
+	private int fetchOperandZeroPage() {
 		return read(fetchOperandAddressZeroPage());
 	}
 
-	private int fetchOperandAddressIndexed(byte index) {
-		return fetchOperandAddressAbsolute() + (index & 0xff);
+	private int fetchOperandAddressIndexed(int index) {
+		return fetchOperandAddressAbsolute() + index;
 	}
 
-	private byte fetchOperandIndexed(byte index) {
+	private int fetchOperandIndexed(int index) {
 		return read(fetchOperandAddressIndexed(index));
 	}
 
-	private int fetchOperandAddressZeroPageIndexed(byte index) {
+	private int fetchOperandAddressZeroPageIndexed(int index) {
 		// stays in zero page -- wraparound!
 		return (fetch() + index) & 0xff;
 	}
 
-	private byte fetchOperandZeroPageIndexed(byte index) {
+	private int fetchOperandZeroPageIndexed(int index) {
 		return read(fetchOperandAddressZeroPageIndexed(index));
 	}
 
-	private int fetchOperandAddressIndirectIndexed(byte index) {
-		int pointerAddress = fetch() & 0xff;
-		int pointer = read16(pointerAddress) & 0xffff;
-		return pointer + index;
+	private int fetchOperandAddressIndirectIndexed(int index) {
+		return read16(fetch()) + index;
 	}
 
-	private byte fetchOperandIndirectIndexed(byte index) {
+	private int fetchOperandIndirectIndexed(int index) {
 		return read(fetchOperandAddressIndirectIndexed(index));
 	}
 
-	private int fetchOperandAddressIndexedIndirect(byte index) {
-		int pointerAddress = (fetch() + index) & 0xff; // wraparound!
-		return read16(pointerAddress) & 0xffff;
+	private int fetchOperandAddressIndexedIndirect(int index) {
+		return read16((fetch() + index) & 0xff); // wraparound!
 	}
 
-	private byte fetchOperandIndexedIndirect(byte index) {
+	private int fetchOperandIndexedIndirect(int index) {
 		return read(fetchOperandAddressIndexedIndirect(index));
 	}
 
-	private void setNZ(byte from) {
+	private void setNZ(int from) {
 		setFlag(FLAG_ZERO, from == 0);
-		setFlag(FLAG_NEGATIVE, from < 0);
+		setFlag(FLAG_NEGATIVE, (from & 128) != 0);
 	}
 
-	private void push(byte data) {
+	private void push(int data) {
 		write(getStackPointerAddress(), data);
 		sp--;
 	}
 
-	private byte pull() {
+	private int pull() {
 		sp++;
 		return read(getStackPointerAddress());
 	}
 
 	private int getStackPointerAddress() {
-		return 0x100 | (sp & 0xff);
+		return 0x100 | sp;
 	}
 
 	//
@@ -153,7 +148,7 @@ public final class Cpu {
 	public void reset() {
 		a = x = y = 0;
 		pc = read16(Constants.RESET_VECTOR_LOCATION);
-		sp = (byte) 0xfd;
+		sp = 0xfd;
 		status = 0x34;
 	}
 
@@ -171,7 +166,7 @@ public final class Cpu {
 
 	public void step() {
 		int opcode = fetch();
-		System.out.println(Integer.toHexString(opcode & 0xff));
+		System.out.println(Integer.toHexString(opcode));
 		switch (opcode) {
 
 			case 0x00: // BRK
@@ -348,10 +343,12 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x61: // ADC - (indirect, X)
-				throw new RuntimeException();
+				executeAdc(fetchOperandIndexedIndirect(x));
+				break;
 
 			case 0x65: // ADC - zero page
-				throw new RuntimeException();
+				executeAdc(fetchOperandZeroPage());
+				break;
 
 			case 0x66: // ROR - zero page
 				throw new RuntimeException();
@@ -362,7 +359,8 @@ public final class Cpu {
 				break;
 
 			case 0x69: // ADC - immediate
-				throw new RuntimeException();
+				executeAdc(fetch());
+				break;
 
 			case 0x6a: // ROR - accumulator
 				throw new RuntimeException();
@@ -371,7 +369,8 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x6d: // ADC - absolute
-				throw new RuntimeException();
+				executeAdc(fetchOperandAbsolute());
+				break;
 
 			case 0x6e: // ROR - absolute
 				throw new RuntimeException();
@@ -380,10 +379,12 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x71: // ADC - (indirect), Y
-				throw new RuntimeException();
+				executeAdc(fetchOperandIndirectIndexed(y));
+				break;
 
 			case 0x75: // ADC - zero page, X
-				throw new RuntimeException();
+				executeAdc(fetchOperandZeroPageIndexed(x));
+				break;
 
 			case 0x76: // ROR - zero page, X
 				throw new RuntimeException();
@@ -393,10 +394,12 @@ public final class Cpu {
 				break;
 
 			case 0x79: // ADC - absolute, Y
-				throw new RuntimeException();
+				executeAdc(fetchOperandIndexed(y));
+				break;
 
 			case 0x7d: // ADC - absolute, X
-				throw new RuntimeException();
+				executeAdc(fetchOperandIndexed(x));
+				break;
 
 			case 0x7e: // ROR - absolute, X
 				throw new RuntimeException();
@@ -414,7 +417,7 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x88: // DEY
-				y--;
+				y = (y - 1) & 0xff;
 				setNZ(y);
 				break;
 
@@ -543,17 +546,15 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0xc8: // INY
-				y++;
+				y = (y + 1) & 0xff;
 				setNZ(y);
 				break;
 
 			case 0xc9: // CMP - immediate
 				throw new RuntimeException();
 
-				// TODO --- check ---
-
 			case 0xca: // DEX
-				x--;
+				x = (x - 1) & 0xff;
 				setNZ(x);
 				break;
 
@@ -591,28 +592,31 @@ public final class Cpu {
 			case 0xde: // DEC - absolute, X
 				throw new RuntimeException();
 
-			case 0xe0: // CPY - immediate
+			case 0xe0: // CPX - immediate
 				throw new RuntimeException();
 
 			case 0xe1: // SBC - (indirect, X)
-				throw new RuntimeException();
+				executeSbc(fetchOperandIndexedIndirect(x));
+				break;
 
 			case 0xe4: // CPX - zero page
 				throw new RuntimeException();
 
 			case 0xe5: // SBC - zero page
-				throw new RuntimeException();
+				executeSbc(fetchOperandZeroPage());
+				break;
 
 			case 0xe6: // INC - zero page
 				throw new RuntimeException();
 
 			case 0xe8: // INX
-				x++;
+				x = (x + 1) & 0xff;
 				setNZ(x);
 				break;
 
 			case 0xe9: // SBC - immediate
-				throw new RuntimeException();
+				executeSbc(fetch());
+				break;
 
 			case 0xea: // NOP
 				break;
@@ -621,7 +625,8 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0xed: // SBC - absolute
-				throw new RuntimeException();
+				executeSbc(fetchOperandAbsolute());
+				break;
 
 			case 0xee: // INC - absolute
 				throw new RuntimeException();
@@ -630,10 +635,12 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0xf1: // SBC - (indirect), Y
-				throw new RuntimeException();
+				executeSbc(fetchOperandIndirectIndexed(y));
+				break;
 
 			case 0xf5: // SBC - zero page, X
-				throw new RuntimeException();
+				executeSbc(fetchOperandZeroPageIndexed(x));
+				break;
 
 			case 0xf6: // INC - zero page, X
 				throw new RuntimeException();
@@ -643,10 +650,12 @@ public final class Cpu {
 				break;
 
 			case 0xf9: // SBC - absolute, Y
-				throw new RuntimeException();
+				executeSbc(fetchOperandIndexed(y));
+				break;
 
 			case 0xfd: // SBC - absolute, X
-				throw new RuntimeException();
+				executeSbc(fetchOperandIndexed(x));
+				break;
 
 			case 0xfe: // INC - absolute, X
 				throw new RuntimeException();
@@ -655,6 +664,18 @@ public final class Cpu {
 				throw new RuntimeException("unknown opcode: " + opcode);
 		}
 		// TODO
+	}
+
+	private void executeAdc(int operand) {
+		int a2 = a + operand;
+		setFlag(FLAG_CARRY, a2 > 255);
+		setFlag(FLAG_OVERFLOW, );
+		a = a2 & 0xff;
+		setNZ(a);
+	}
+
+	private void executeSbc(int operand) {
+
 	}
 
 }
