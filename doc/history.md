@@ -23,5 +23,12 @@ CPU uses reset vector and fetches first instruction bytes correctly.
 Read the PPU specs over and over again to understand how it decodes its own address space. Wrote some
 code in an attempt to simulate that.
 
+# Day 4..7
+
+Read CPU docs over and over again.
+
+# Day 8
+
+Start implementing a sequential CPU model.
 
  
