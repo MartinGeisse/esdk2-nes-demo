@@ -276,7 +276,12 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0x20: // JSR
-				throw new RuntimeException();
+			{
+				int address = fetchOperandAddressAbsolute();
+				push((pc - 1) >> 8);
+				push((pc - 1) & 0xff);
+				break;
+			}
 
 			case 0x21: // AND - (indirect, X)
 				a &= fetchOperandIndexedIndirect(x);
@@ -685,13 +690,15 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0xc1: // CMP - (indirect, X)
-				throw new RuntimeException();
+				executeSbc(fetchOperandIndexedIndirect(x), false);
+				break;
 
 			case 0xc4: // CPY - zero page
 				throw new RuntimeException();
 
 			case 0xc5: // CMP - zero page
-				throw new RuntimeException();
+				executeSbc(fetchOperandZeroPage(), false);
+				break;
 
 			case 0xc6: // DEC - zero page
 			{
@@ -708,7 +715,8 @@ public final class Cpu {
 				break;
 
 			case 0xc9: // CMP - immediate
-				throw new RuntimeException();
+				executeSbc(fetch(), false);
+				break;
 
 			case 0xca: // DEX
 				x = (x - 1) & 0xff;
@@ -719,7 +727,8 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0xcd: // CMP - absolute
-				throw new RuntimeException();
+				executeSbc(fetchOperandAbsolute(), false);
+				break;
 
 			case 0xce: // DEC - absolute
 			{
@@ -735,10 +744,12 @@ public final class Cpu {
 				break;
 
 			case 0xd1: // CMP - (indirect), y
-				throw new RuntimeException();
+				executeSbc(fetchOperandIndirectIndexed(y), false);
+				break;
 
 			case 0xd5: // CMP - zero page, X
-				throw new RuntimeException();
+				executeSbc(fetchOperandZeroPageIndexed(x), false);
+				break;
 
 			case 0xd6: // DEC - zero page, X
 			{
@@ -754,10 +765,12 @@ public final class Cpu {
 				break;
 
 			case 0xd9: // CMP - absolute, Y
-				throw new RuntimeException();
+				executeSbc(fetchOperandIndexed(y), false);
+				break;
 
 			case 0xdd: // CMP - absolute, X
-				throw new RuntimeException();
+				executeSbc(fetchOperandIndexed(x), false);
+				break;
 
 			case 0xde: // DEC - absolute, X
 			{
@@ -772,14 +785,14 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0xe1: // SBC - (indirect, X)
-				executeSbc(fetchOperandIndexedIndirect(x));
+				executeSbc(fetchOperandIndexedIndirect(x), true);
 				break;
 
 			case 0xe4: // CPX - zero page
 				throw new RuntimeException();
 
 			case 0xe5: // SBC - zero page
-				executeSbc(fetchOperandZeroPage());
+				executeSbc(fetchOperandZeroPage(), true);
 				break;
 
 			case 0xe6: // INC - zero page
@@ -797,7 +810,7 @@ public final class Cpu {
 				break;
 
 			case 0xe9: // SBC - immediate
-				executeSbc(fetch());
+				executeSbc(fetch(), true);
 				break;
 
 			case 0xea: // NOP
@@ -807,7 +820,7 @@ public final class Cpu {
 				throw new RuntimeException();
 
 			case 0xed: // SBC - absolute
-				executeSbc(fetchOperandAbsolute());
+				executeSbc(fetchOperandAbsolute(), true);
 				break;
 
 			case 0xee: // INC - absolute
@@ -824,11 +837,11 @@ public final class Cpu {
 				break;
 
 			case 0xf1: // SBC - (indirect), Y
-				executeSbc(fetchOperandIndirectIndexed(y));
+				executeSbc(fetchOperandIndirectIndexed(y), true);
 				break;
 
 			case 0xf5: // SBC - zero page, X
-				executeSbc(fetchOperandZeroPageIndexed(x));
+				executeSbc(fetchOperandZeroPageIndexed(x), true);
 				break;
 
 			case 0xf6: // INC - zero page, X
@@ -845,11 +858,11 @@ public final class Cpu {
 				break;
 
 			case 0xf9: // SBC - absolute, Y
-				executeSbc(fetchOperandIndexed(y));
+				executeSbc(fetchOperandIndexed(y), true);
 				break;
 
 			case 0xfd: // SBC - absolute, X
-				executeSbc(fetchOperandIndexed(x));
+				executeSbc(fetchOperandIndexed(x), true);
 				break;
 
 			case 0xfe: // INC - absolute, X
@@ -875,7 +888,7 @@ public final class Cpu {
 		setNZ(a);
 	}
 
-	private void executeSbc(int operand) {
+	private void executeSbc(int operand, boolean store) {
 		// TODO
 	}
 
