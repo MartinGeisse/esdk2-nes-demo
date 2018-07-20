@@ -219,7 +219,8 @@ public final class Cpu {
 				break;
 
 			case 0x06: // ASL - zero page
-				throw new RuntimeException();
+				performAsl(fetchOperandAddressZeroPage());
+				break;
 
 			case 0x08: // PHP
 				push(status);
@@ -231,7 +232,10 @@ public final class Cpu {
 				break;
 
 			case 0x0a: // ASL - accumulator
-				throw new RuntimeException();
+				setFlag(FLAG_CARRY, (a & 128) != 0);
+				a <<= 1;
+				setNZ(a);
+				break;
 
 			case 0x0d: // ORA - absolute
 				a |= fetchOperandAbsolute();
@@ -239,7 +243,8 @@ public final class Cpu {
 				break;
 
 			case 0x0e: // ASL - absolute
-				throw new RuntimeException();
+				performAsl(fetchOperandAddressAbsolute());
+				break;
 
 			case 0x10: // BPL
 				fetchAndExecuteBranch(!getFlag(FLAG_NEGATIVE));
@@ -256,7 +261,8 @@ public final class Cpu {
 				break;
 
 			case 0x16: // ASL - zero page, X
-				throw new RuntimeException();
+				performAsl(fetchOperandAddressZeroPageIndexed(x));
+				break;
 
 			case 0x18: // CLC
 				clearFlag(FLAG_CARRY);
@@ -273,7 +279,8 @@ public final class Cpu {
 				break;
 
 			case 0x1e: // ASL - absolute, X
-				throw new RuntimeException();
+				performAsl(fetchOperandAddressIndexed(x));
+				break;
 
 			case 0x20: // JSR
 			{
@@ -289,7 +296,8 @@ public final class Cpu {
 				break;
 
 			case 0x24: // BIT - zero page
-				throw new RuntimeException();
+				performBit(fetchOperandZeroPage());
+				break;
 
 			case 0x25: // AND - zero page
 				a &= fetchOperandZeroPage();
@@ -297,7 +305,8 @@ public final class Cpu {
 				break;
 
 			case 0x26: // ROL - zero page
-				throw new RuntimeException();
+				performRol(fetchOperandAddressZeroPage());
+				break;
 
 			case 0x28: // PLP
 				status = pull();
@@ -309,10 +318,17 @@ public final class Cpu {
 				break;
 
 			case 0x2a: // ROL - accumulator
-				throw new RuntimeException();
+			{
+				boolean oldCarry = getFlag(FLAG_CARRY);
+				setFlag(FLAG_CARRY, (a & 128) != 0);
+				a = (a << 1) + (oldCarry ? 1 : 0);
+				setNZ(a);
+				break;
+			}
 
 			case 0x2c: // BIT - absolute
-				throw new RuntimeException();
+				performBit(fetchOperandAbsolute());
+				break;
 
 			case 0x2d: // AND - absolute
 				a &= fetchOperandAbsolute();
@@ -320,7 +336,8 @@ public final class Cpu {
 				break;
 
 			case 0x2e: // ROL - absolute
-				throw new RuntimeException();
+				performRol(fetchOperandAddressAbsolute());
+				break;
 
 			case 0x30: // BMI
 				fetchAndExecuteBranch(getFlag(FLAG_NEGATIVE));
@@ -337,7 +354,8 @@ public final class Cpu {
 				break;
 
 			case 0x36: // ROL - zero page, X
-				throw new RuntimeException();
+				performRol(fetchOperandAddressZeroPageIndexed(x));
+				break;
 
 			case 0x38: // SEC
 				setFlag(FLAG_CARRY);
@@ -354,10 +372,13 @@ public final class Cpu {
 				break;
 
 			case 0x3e: // ROL - absolute, X
-				throw new RuntimeException();
+				performRol(fetchOperandAddressIndexed(x));
+				break;
 
 			case 0x40: // RTI
-				throw new RuntimeException();
+				status = pull();
+				pc = pull() + (pull() << 8);
+				break;
 
 			case 0x41: // EOR - (indirect, X)
 				a ^= fetchOperandIndexedIndirect(x);
@@ -370,7 +391,8 @@ public final class Cpu {
 				break;
 
 			case 0x46: // LSR - zero page
-				throw new RuntimeException();
+				performLsr(fetchOperandAddressZeroPage());
+				break;
 
 			case 0x48: // PHA
 				push(a);
@@ -382,7 +404,10 @@ public final class Cpu {
 				break;
 
 			case 0x4a: // LSR - accumulator
-				throw new RuntimeException();
+				setFlag(FLAG_CARRY, (a & 1) != 0);
+				a >>>= 1;
+				setNZ(a);
+				break;
 
 			case 0x4c: // JMP - absolute
 				pc = fetchOperandAddressAbsolute();
@@ -394,7 +419,8 @@ public final class Cpu {
 				break;
 
 			case 0x4e: // LSR - absolute
-				throw new RuntimeException();
+				performLsr(fetchOperandAddressAbsolute());
+				break;
 
 			case 0x50: // BVC
 				fetchAndExecuteBranch(!getFlag(FLAG_OVERFLOW));
@@ -411,7 +437,8 @@ public final class Cpu {
 				break;
 
 			case 0x56: // LSR - zero page, X
-				throw new RuntimeException();
+				performLsr(fetchOperandAddressZeroPageIndexed(x));
+				break;
 
 			case 0x58: // CLI
 				clearFlag(FLAG_INTERRUPT_DISABLE);
@@ -428,10 +455,12 @@ public final class Cpu {
 				break;
 
 			case 0x5e: // LSR - absolute, X
-				throw new RuntimeException();
+				performLsr(fetchOperandAddressIndexed(x));
+				break;
 
 			case 0x60: // RTS
-				throw new RuntimeException();
+				pc = pull() + (pull() << 8) + 1;
+				break;
 
 			case 0x61: // ADC - (indirect, X)
 				executeAdc(fetchOperandIndexedIndirect(x));
@@ -442,7 +471,8 @@ public final class Cpu {
 				break;
 
 			case 0x66: // ROR - zero page
-				throw new RuntimeException();
+				performRor(fetchOperandAddressZeroPage());
+				break;
 
 			case 0x68: // PLA
 				a = pull();
@@ -454,7 +484,13 @@ public final class Cpu {
 				break;
 
 			case 0x6a: // ROR - accumulator
-				throw new RuntimeException();
+			{
+				boolean oldCarry = getFlag(FLAG_CARRY);
+				setFlag(FLAG_CARRY, (a & 1) != 0);
+				a = (a >>> 1) + (oldCarry ? 128 : 0);
+				setNZ(a);
+				break;
+			}
 
 			case 0x6c: // JMP - indirect
 				pc = fetchOperandAddressIndexedIndirect(0);
@@ -465,7 +501,8 @@ public final class Cpu {
 				break;
 
 			case 0x6e: // ROR - absolute
-				throw new RuntimeException();
+				performRor(fetchOperandAddressAbsolute());
+				break;
 
 			case 0x70: // BVS
 				fetchAndExecuteBranch(getFlag(FLAG_OVERFLOW));
@@ -480,7 +517,8 @@ public final class Cpu {
 				break;
 
 			case 0x76: // ROR - zero page, X
-				throw new RuntimeException();
+				performRor(fetchOperandAddressZeroPageIndexed(x));
+				break;
 
 			case 0x78: // SEI
 				setFlag(FLAG_INTERRUPT_DISABLE);
@@ -495,7 +533,8 @@ public final class Cpu {
 				break;
 
 			case 0x7e: // ROR - absolute, X
-				throw new RuntimeException();
+				performRor(fetchOperandAddressIndexed(x));
+				break;
 
 			case 0x81: // STA - (indirect, X)
 				write(fetchOperandAddressIndexedIndirect(x), a);
@@ -687,17 +726,19 @@ public final class Cpu {
 				break;
 
 			case 0xc0: // CPY - immediate
-				throw new RuntimeException();
+				performCmp(x, fetch());
+				break;
 
 			case 0xc1: // CMP - (indirect, X)
-				executeSbc(fetchOperandIndexedIndirect(x), false);
+				performCmp(a, fetchOperandIndexedIndirect(x));
 				break;
 
 			case 0xc4: // CPY - zero page
-				throw new RuntimeException();
+				performCmp(x, fetchOperandZeroPage());
+				break;
 
 			case 0xc5: // CMP - zero page
-				executeSbc(fetchOperandZeroPage(), false);
+				performCmp(a, fetchOperandZeroPage());
 				break;
 
 			case 0xc6: // DEC - zero page
@@ -715,7 +756,7 @@ public final class Cpu {
 				break;
 
 			case 0xc9: // CMP - immediate
-				executeSbc(fetch(), false);
+				performCmp(a, fetch());
 				break;
 
 			case 0xca: // DEX
@@ -724,10 +765,11 @@ public final class Cpu {
 				break;
 
 			case 0xcc: // CPY - absolute
-				throw new RuntimeException();
+				performCmp(x, fetchOperandAbsolute());
+				break;
 
 			case 0xcd: // CMP - absolute
-				executeSbc(fetchOperandAbsolute(), false);
+				performCmp(a, fetchOperandAbsolute());
 				break;
 
 			case 0xce: // DEC - absolute
@@ -744,11 +786,11 @@ public final class Cpu {
 				break;
 
 			case 0xd1: // CMP - (indirect), y
-				executeSbc(fetchOperandIndirectIndexed(y), false);
+				performCmp(a, fetchOperandIndirectIndexed(y));
 				break;
 
 			case 0xd5: // CMP - zero page, X
-				executeSbc(fetchOperandZeroPageIndexed(x), false);
+				performCmp(a, fetchOperandZeroPageIndexed(x));
 				break;
 
 			case 0xd6: // DEC - zero page, X
@@ -765,11 +807,11 @@ public final class Cpu {
 				break;
 
 			case 0xd9: // CMP - absolute, Y
-				executeSbc(fetchOperandIndexed(y), false);
+				performCmp(a, fetchOperandIndexed(y));
 				break;
 
 			case 0xdd: // CMP - absolute, X
-				executeSbc(fetchOperandIndexed(x), false);
+				performCmp(a, fetchOperandIndexed(x));
 				break;
 
 			case 0xde: // DEC - absolute, X
@@ -782,17 +824,19 @@ public final class Cpu {
 			}
 
 			case 0xe0: // CPX - immediate
-				throw new RuntimeException();
+				performCmp(x, fetch());
+				break;
 
 			case 0xe1: // SBC - (indirect, X)
-				executeSbc(fetchOperandIndexedIndirect(x), true);
+				executeSbc(fetchOperandIndexedIndirect(x));
 				break;
 
 			case 0xe4: // CPX - zero page
-				throw new RuntimeException();
+				performCmp(x, fetchOperandZeroPage());
+				break;
 
 			case 0xe5: // SBC - zero page
-				executeSbc(fetchOperandZeroPage(), true);
+				executeSbc(fetchOperandZeroPage());
 				break;
 
 			case 0xe6: // INC - zero page
@@ -810,17 +854,18 @@ public final class Cpu {
 				break;
 
 			case 0xe9: // SBC - immediate
-				executeSbc(fetch(), true);
+				executeSbc(fetch());
 				break;
 
 			case 0xea: // NOP
 				break;
 
 			case 0xec: // CPX - absolute
-				throw new RuntimeException();
+				performCmp(x, fetchOperandAbsolute());
+				break;
 
 			case 0xed: // SBC - absolute
-				executeSbc(fetchOperandAbsolute(), true);
+				executeSbc(fetchOperandAbsolute());
 				break;
 
 			case 0xee: // INC - absolute
@@ -837,11 +882,11 @@ public final class Cpu {
 				break;
 
 			case 0xf1: // SBC - (indirect), Y
-				executeSbc(fetchOperandIndirectIndexed(y), true);
+				executeSbc(fetchOperandIndirectIndexed(y));
 				break;
 
 			case 0xf5: // SBC - zero page, X
-				executeSbc(fetchOperandZeroPageIndexed(x), true);
+				executeSbc(fetchOperandZeroPageIndexed(x));
 				break;
 
 			case 0xf6: // INC - zero page, X
@@ -858,11 +903,11 @@ public final class Cpu {
 				break;
 
 			case 0xf9: // SBC - absolute, Y
-				executeSbc(fetchOperandIndexed(y), true);
+				executeSbc(fetchOperandIndexed(y));
 				break;
 
 			case 0xfd: // SBC - absolute, X
-				executeSbc(fetchOperandIndexed(x), true);
+				executeSbc(fetchOperandIndexed(x));
 				break;
 
 			case 0xfe: // INC - absolute, X
@@ -877,19 +922,28 @@ public final class Cpu {
 			default:
 				throw new RuntimeException("unknown opcode: " + opcode);
 		}
-		// TODO
 	}
 
 	private void executeAdc(int operand) {
-		int a2 = a + operand;
+		int a2 = a + operand + (getFlag(FLAG_CARRY) ? 1 : 0);
 		setFlag(FLAG_CARRY, a2 > 255);
-		// TODO setFlag(FLAG_OVERFLOW, );
+		setFlag(FLAG_OVERFLOW, (a & 128) == (operand & 128) && (a & 128) != (a2 & 128));
 		a = a2 & 0xff;
 		setNZ(a);
 	}
 
-	private void executeSbc(int operand, boolean store) {
-		// TODO
+	private void executeSbc(int operand) {
+		int a2 = a - operand - (getFlag(FLAG_CARRY) ? 1 : 0);
+		setFlag(FLAG_CARRY, a2 >= 0); // borrow is carry inverted
+		setFlag(FLAG_OVERFLOW, (a & 128) != (operand & 128) && (a & 128) != (a2 & 128));
+		a = a2 & 0xff;
+		setNZ(a);
+	}
+
+	private void performCmp(int leftOperand, int rightOperand) {
+		int a2 = leftOperand - rightOperand;
+		setFlag(FLAG_CARRY, a2 >= 0); // borrow is carry inverted
+		setNZ(a2);
 	}
 
 	private void fetchAndExecuteBranch(boolean condition) {
@@ -897,6 +951,44 @@ public final class Cpu {
 		if (condition) {
 			pc += offset;
 		}
+	}
+
+	private void performAsl(int address) {
+		int oldValue = read(address);
+		setFlag(FLAG_CARRY, (oldValue & 128) != 0);
+		int newValue = (oldValue << 1) & 0xff;
+		setNZ(newValue);
+		write(address, newValue);
+	}
+
+	private void performLsr(int address) {
+		int oldValue = read(address);
+		setFlag(FLAG_CARRY, (oldValue & 1) != 0);
+		int newValue = oldValue >>> 1;
+		setNZ(newValue);
+		write(address, newValue);
+	}
+
+	private void performRol(int address) {
+		int oldValue = read(address);
+		int newValue = (oldValue << 1) & 0xff + (getFlag(FLAG_CARRY) ? 1 : 0);
+		setFlag(FLAG_CARRY, (oldValue & 128) != 0);
+		setNZ(newValue);
+		write(address, newValue);
+	}
+
+	private void performRor(int address) {
+		int oldValue = read(address);
+		int newValue = (oldValue >>> 1) + (getFlag(FLAG_CARRY) ? 128 : 0);
+		setFlag(FLAG_CARRY, (oldValue & 1) != 0);
+		setNZ(newValue);
+		write(address, newValue);
+	}
+
+	private void performBit(int operand) {
+		setFlag(FLAG_NEGATIVE, (operand & 128) != 0);
+		setFlag(FLAG_OVERFLOW, (operand & 64) != 0);
+		setFlag(FLAG_ZERO, (a & operand) == 0);
 	}
 
 }
