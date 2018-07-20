@@ -85,9 +85,14 @@ public class Ppu {
 	private final Screen screen;
 	private final Runnable vblankEdgeCallback;
 	private boolean vblank = false;
+	private int previousWriteValue = 0;
 	private int controlRegister = 0;
 	private int maskRegister = 0;
-	private int previousWriteValue = 0;
+	private int sprRamAddressRegister = 0;
+	private int backgroundScrollRegister = 0;
+	private int vramAddressRegister = 0;
+	private int vramReadData = 0;
+	private byte[] sprRam = new byte[256];
 
 	public Ppu(BusHandler busHandler, Screen screen, Runnable vblankEdgeCallback) {
 		if (busHandler == null) {
@@ -104,26 +109,32 @@ public class Ppu {
 	public void drawRow(int row) {
 		int tileY = row >> 3;
 		int pixelY = row & 7;
+		int patternTableBaseAddress = 0; // TODO should come from a configuration register
+		int attributeTableBaseAddress = patternTableBaseAddress + 960;
 		for (int tileX = 0; tileX < Constants.NAME_TABLE_WIDTH; tileX++) {
 
-			// test -- should actually read from name table here
-			int tileCode = (tileY * 32 + tileX) & 0xFF;
+			// read tile code from the name table
+			int tileAddress = 0x2000 + (tileY * 32 + tileX) & 0xff;
+			int tileCode = busHandler.read(tileAddress);
 
-			// test -- should come from a configuration register
-			int patternBaseAddress = 0x1000 * ((tileY >> 3) & 1);
+			// read pattern from the pattern table
+			int patternLine1 = busHandler.read(patternTableBaseAddress + (tileCode << 4) + (pixelY << 1));
+			int patternLine2 = busHandler.read(patternTableBaseAddress + (tileCode << 4) + (pixelY << 1) + 1);
+
+			// read attributes from the attribute table
+			int attributeByte = busHandler.read(attributeTableBaseAddress + ((tileY >> 2) << 3) + tileX >> 2);
+			int shiftAmount = ((tileX & 2) == 0 ? 0 : 2) + ((tileY & 2) == 0 ? 0 : 4);
+			int upperTwoColorIndexBitsPreshifted = ((attributeByte >> shiftAmount) & 3) << 2;
 
 			for (int pixelX = 0; pixelX < Constants.TILE_WIDTH; pixelX++) {
 
-				// read from pattern table
-				int patternLine1 = busHandler.read(patternBaseAddress + (tileCode << 4) + (pixelY << 1));
-				int patternLine2 = busHandler.read(patternBaseAddress + (tileCode << 4) + (pixelY << 1) + 1);
 				int columnMask = (128 >> pixelX);
-				int lowTwoColorIndexBits = ((patternLine1 & columnMask) != 0 ? 2 : 0) +
+				int lowerTwoColorIndexBits = ((patternLine1 & columnMask) != 0 ? 2 : 0) +
 					((patternLine2 & columnMask) != 0 ? 1 : 0);
-				// TODO use upper two bits from attribute table
-				int localColorIndex = lowTwoColorIndexBits;
-				// TODO read color from nackground palette
-				int globalColorIndex = localColorIndex;
+
+				// determine color
+				int localColorIndex = lowerTwoColorIndexBits == 0 ? 0 : (upperTwoColorIndexBitsPreshifted | lowerTwoColorIndexBits);
+				int globalColorIndex = busHandler.read(0x3f00 + localColorIndex);
 				int color = systemPalette[globalColorIndex];
 
 				screen.setPixel(tileX * Constants.TILE_WIDTH + pixelX, tileY * Constants.TILE_HEIGHT + pixelY, color);
@@ -142,15 +153,47 @@ public class Ppu {
 	}
 
 	public void setControlRegister(int controlRegister) {
-		this.previousWriteValue = this.controlRegister = controlRegister;
+		this.previousWriteValue = this.controlRegister = controlRegister & 0xff;
 	}
 
 	public void setMaskRegister(int maskRegister) {
-		this.previousWriteValue = this.maskRegister = maskRegister;
+		this.previousWriteValue = this.maskRegister = maskRegister & 0xff;
 	}
 
 	public int getStatusRegister() {
 		return (previousWriteValue & 31) | (vblank ? 128 : 0);
+	}
+
+	public void setSprRamAddressRegister(int sprRamAddressRegister) {
+		this.previousWriteValue = this.sprRamAddressRegister = sprRamAddressRegister & 0xff;
+	}
+
+	public void writeToSprRam(int data) {
+		sprRam[sprRamAddressRegister] = (byte)data;
+		sprRamAddressRegister = (sprRamAddressRegister + 1) & 0xff;
+	}
+
+	public void setBackgroundScrollRegister(int backgroundScrollRegister) {
+		this.previousWriteValue = this.backgroundScrollRegister = backgroundScrollRegister & 0xff;
+	}
+
+	public void writeToVramAddressRegister(int value) {
+		// my best guess how the VRAM address register handles two writes to build a 16-bit address
+		this.previousWriteValue = value & 0xff;
+		vramAddressRegister = (vramAddressRegister & 0xff) << 8 | value & 0xff;
+	}
+
+	public void writeToVram(int data) {
+		busHandler.write(vramAddressRegister, (byte)data);
+		int increment = (controlRegister & 4) == 0 ? 1 : 32;
+		vramAddressRegister = (vramAddressRegister + increment) & 0xffff;
+	}
+
+	public int readFromVram() {
+		// my best guess why the first byte read contains garbage
+		int result = vramReadData;
+		vramReadData = busHandler.read(vramAddressRegister);
+		return result;
 	}
 
 }

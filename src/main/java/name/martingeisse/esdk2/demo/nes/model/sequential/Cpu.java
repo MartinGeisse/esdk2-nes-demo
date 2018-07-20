@@ -184,6 +184,7 @@ public final class Cpu {
 
 	public void step() {
 
+		/*
 		boolean debug = (pc > 0x800d);
 		if (debug) {
 			System.out.print("pc=" + toHex(pc, 4) + " a=" + toHex(a, 2) + " x=" + toHex(x, 2) + " y=" + toHex(y, 2));
@@ -197,11 +198,12 @@ public final class Cpu {
 				}
 			}
 		}
+		*/
 
 		int opcode = fetch();
-		if (debug) {
-			System.out.println(" opcode=" + toHex(opcode, 2));
-		}
+//		if (debug) {
+//			System.out.println(" opcode=" + toHex(opcode, 2) + " next = " + toHex(read(pc), 2) + ", " + toHex(read(pc + 1), 2));
+//		}
 
 		switch (opcode) {
 
@@ -287,6 +289,7 @@ public final class Cpu {
 				int address = fetchOperandAddressAbsolute();
 				push((pc - 1) >> 8);
 				push((pc - 1) & 0xff);
+				pc = address;
 				break;
 			}
 
@@ -726,7 +729,7 @@ public final class Cpu {
 				break;
 
 			case 0xc0: // CPY - immediate
-				performCmp(x, fetch());
+				performCmp(y, fetch());
 				break;
 
 			case 0xc1: // CMP - (indirect, X)
@@ -734,7 +737,7 @@ public final class Cpu {
 				break;
 
 			case 0xc4: // CPY - zero page
-				performCmp(x, fetchOperandZeroPage());
+				performCmp(y, fetchOperandZeroPage());
 				break;
 
 			case 0xc5: // CMP - zero page
@@ -765,7 +768,7 @@ public final class Cpu {
 				break;
 
 			case 0xcc: // CPY - absolute
-				performCmp(x, fetchOperandAbsolute());
+				performCmp(y, fetchOperandAbsolute());
 				break;
 
 			case 0xcd: // CMP - absolute
