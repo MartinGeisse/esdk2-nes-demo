@@ -36,4 +36,12 @@ Start implementing a sequential CPU model.
 Continued implementing CPU instructions; added PPU control / mask / status register stubs so my test ROM
 gets some code executed without errors.
 
+# Day 10
+
+CPU instructions should be mostly finished but probably still contain bugs.
+Worked on PPU background rendering, but it's not working yet.
+
+
+
+
  
