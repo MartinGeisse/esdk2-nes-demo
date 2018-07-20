@@ -1,6 +1,45 @@
+**************************
+*2A03 technical reference*
+**************************
+Brad Taylor (BTTDgroup@hotmail.com)
+First release: April 23rd, 2004
 
-Important missing features:
+Thanks to hundreds of selfless people around the world, a document like this
+one can exist because people who love NES/FC/FDS research & development have
+chosen to share their findings, experience, and knowledge. With
+"http://nesdev.parodius.com" and the Membled Messageboards, public-domain
+NES software/hardware/emulator development has already hit a new standard of
+excellence, and is attracting more people nowadays then ever before because
+of this.
 
+Note: to display this document properly, your text viewer needs two things:
+1. support for the classic VGA-based text mode 256 character set with
+line-drawing characters. 2. word-wrap. windows notepad can easially do both
+if you change the font over to terminal style.
+
+
++----------------+
+|Topics discussed|
++----------------+
+Integrated components overview
+2A03 pin nomenclature & signal descriptions
+6502 opcode pattern tables
+Introduction to sound channels
+Low frequency programmable timer
+2A03 internal hardware port map
+Microarchitecture of basic sound channels
+
+
+********************************
+*Integrated components overview*
+********************************
+The 2A03 is a custom integrated circuit used as the heart of NES game
+consoles and Family Computers. To avoid costly glue logic, Nintendo squeezed
+alot of hardware (alot for the time, which was like 1982) inside this chip.
+Here is a list of known integrated components found in the 2A03 (* prefix
+indicates simple hardware discussed next).
+
+- stock NMOS 6502 microprocessor lacking decimal mode support
 - low frequency programmable timer
 - two nearly-identical rectangle wave function generators
 - triangle wave function generator
@@ -12,12 +51,100 @@ Important missing features:
 * 3-bit register and address decoder for $4016W
 
 
+*********************************************
+*2A03 pin nomenclature & signal descriptions*
+*********************************************
+This chapter owes thanks to Kevin Horton for his help with alot of my early
+technical questions on the NES back in 1999, and his excellent "NES Cart
+Types" document.
+
+          ___  ___
+         |*  \/   |
+ROUT  <01]        [40<  VCC
+COUT  <02]        [39>  $4016W.0
+/RES >03]        [38>  $4016W.1
+A0   <04]        [37>  $4016W.2
+A1   <05]        [36>  /$4016R
+A2   <06]        [35>  /$4017R
+A3   <07]        [34>  R/W
+A4   <08]        [33<  /NMI
+A5   <09]        [32<  /IRQ
+A6   <10]  2A03  [31>  PHI2
+A7   <11]        [30<  ---
+A8   <12]        [29<  CLK
+A9   <13]        [28]  D0
+A10  <14]        [27]  D1
+A11  <15]        [26]  D2
+A12  <16]        [25]  D3
+A13  <17]        [24]  D4
+A14  <18]        [23]  D5
+A15  <19]        [22]  D6
+VEE  >20]        [21]  D7
+         |________|
 
 
+ROUT: this signal carries the mixed outputs for both internal rectangle wave
+function generators (see  "4-bit DAC" section for details).
 
-------------------------------------------------------------------------------------------------------------
+COUT: this signal carries the combined outputs for an internal triangle
+wave/random wave function generator, and a programmable 7-bit DAC controlled
+by a delta counter/DMA timer unit combination (see  "4-bit DAC" section for
+details).
 
-opcode table:
+/RES: hard reset on zero. Resets the status of several internal 2A03
+registers, and the 6502.
+
+A0-A15: the 6502's address bus output pins.
+
+VEE, VCC: ground, and +5VDC power signals, respectfully.
+
+D0-D7: the 6502's data bus.
+
+CLK: this is the 2A03's master clock input line (236250/11 KHz), and clocks
+an internal divide-by-12 counter.
+
+---: normally grounded in NES/FC consoles, this pin has unknown
+functionality. I suspect that it is an input controlling somthing, since the
+pin does draw a little current.
+
+PHI2: this output is the divide-by-12 result of the CLK signal (1.79 MHz).
+The internal 6502 along with function generating hardware, is clocked off
+this frequency, and is available externally here so that it can be used as a
+data bus enable signal (when at logic level 1) for external 6502 address
+decoder logic. The signal has a 62.5% duty cycle.
+
+/IRQ: interrupts the 6502 when this pin is set to zero while the 6502's
+internal interrupt mask flag is 0.
+
+/NMI: NMI's the 6502 on a negative edge signal transition (1->0).
+
+R/W: direction of 6502's data bus (0=write;1=read).
+
+/$4017R: goes active (zero) when A0-A15 = $4017, R/W = 0, and PHI2 = 1. This
+informs an external 3-state inverter to throw controller port data onto the
+D0-D7 lines.
+
+/$4016R: goes active (zero) when A0-A15 = $4016, R/W = 0, and PHI2 = 1.
+
+$4016W.0, $4016W.1, $4016W.2: these signals represent the real-time status
+of a 3 bit writable register located at $4016 in the 6502 memory map. In
+NES/FC consoles, $4016W.0 is used as a strobe line for the CMOS 4021 shift
+register used inside NES/FC controllers.
+
+
+****************************
+*6502 opcode pattern tables*
+****************************
+Below are two tables which displays the 6502 opcode matrix, and clearly
+exposes all the wierd ways the opcode number relates to the operation of the
+instruction. This new version has John West and Marko M�kel� to thank for
+their excellent "NMOS 65xx Instruction Set" documentation, available at
+http://nesdev.parodius.com/. This document is recommend literature for those
+of you out there who are looking for an exteremely detailed look at how the
+6502 works on a per-clock cycle basis (useful for correct emulation of
+instructions with dead cycles, like BRK, JSR, RTI, RTS, push/pop, implied,
+and read-modify-write ones (RMW are the most important to implement
+properly)).
 
 
 +-------------+
@@ -119,7 +246,29 @@ details)
     jams machine rarely
 ---  jams machine
 
--lowercase instructions are undocumented. However, most of them are
+*: The first clock of any instruction is forced to read the next program 
+counter address value into an internal 6502 temp reg, since any 6502 address 
+has to be calculated one cycle before it can be accessed (the 6502's opcode 
+fetch microcode cycles always increment & select the program counter as the 
+next address to appear on the bus). For implied instructions, this means 
+that the next instruction's opcode byte is loaded into an internal temp reg, 
+but _not_ into the instruction register, which is where it would need to be 
+to execute the instruction in just one clock. As a result, no 6502 
+instructions are less than two clocks long.
+
+*: JSR uses 2 byte immediate. The first immediate byte is read into a 6502 
+temp reg on the first clock, then PC is pushed onto the stack. After, the 
+second immediate byte is read in & transfered to PCH, simultaniously while 
+loading PCL with the temp reg contents.
+
+-JSR has a latency of six cycles, which includes one which seems to be a 
+completely dead cycle. I think that this is because the 6502 is reusing the 
+BRK microcode to perform the JSR.
+
+-all instructions where any $nn,X and $nnnn,X addressing mode rows intersect 
+with opcode columns 82 and A2, use the Y register for indexing.
+
+-lowercase instructions are undocumented. However, most of them are 
 basically composed of replacing the last microcode cycle of an instruction 
 from the corresponding read-modify-write group (shift/inc/dec) column, with 
 one from the load-execute group (and,ora,adc,etc.) column. The reason they 
