@@ -109,7 +109,7 @@ public class Ppu {
 	public void drawRow(int row) {
 		int tileY = row >> 3;
 		int pixelY = row & 7;
-		int patternTableBaseAddress = 0; // TODO should come from a configuration register
+		int patternTableBaseAddress = (controlRegister & 16) == 0 ? 0x0000 : 0x1000;
 		int attributeTableBaseAddress = patternTableBaseAddress + 960;
 		for (int tileX = 0; tileX < Constants.NAME_TABLE_WIDTH; tileX++) {
 
@@ -171,6 +171,12 @@ public class Ppu {
 	public void writeToSprRam(int data) {
 		sprRam[sprRamAddressRegister] = (byte)data;
 		sprRamAddressRegister = (sprRamAddressRegister + 1) & 0xff;
+	}
+
+	public int readFromSprRam() {
+		int result = sprRam[sprRamAddressRegister] & 0xff;
+		sprRamAddressRegister = (sprRamAddressRegister + 1) & 0xff;
+		return result;
 	}
 
 	public void setBackgroundScrollRegister(int backgroundScrollRegister) {

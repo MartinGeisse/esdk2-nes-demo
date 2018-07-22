@@ -41,7 +41,15 @@ gets some code executed without errors.
 CPU instructions should be mostly finished but probably still contain bugs.
 Worked on PPU background rendering, but it's not working yet.
 
+# Day 11
 
+Realized that a NES clone on an FPGA is fundamentally different from building something
+new on an FPGA. Here I have existing software that I can't change and for which I can't
+build a model -- I have to take it "as is".
 
+This affects simulation performance. OTOH, I can recognize specific program sequences
+and optimize for them. For example, when the program runs into an endless loop, I can
+recognize the jump to itself and simulate passive sleep instead of active sleep (usually
+at the end of a frame, when waiting for the next interrupt or NMI to happen).
 
- 
+Also skimmed the CPU code again to find bugs, and fixed some.

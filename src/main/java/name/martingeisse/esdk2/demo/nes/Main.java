@@ -29,7 +29,17 @@ public class Main {
 
 		// CartridgeFileContents cartridgeFileContents = new CartridgeFileContents(new File("/Users/martin/test.nes"));
 		CartridgeFileContents cartridgeFileContents = new CartridgeFileContents(new File("resource/roms/HelloWorld.nes"));
-		SequentialNesModel model = new SequentialNesModel(cartridgeFileContents);
+		final SequentialNesModel model = new SequentialNesModel(cartridgeFileContents);
+
+		new Thread(() -> {
+			SequentialNesModel model2 = model;
+			try {
+				Thread.sleep(2_000);
+				System.out.println();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}).start();
 
 		while (true) {
 

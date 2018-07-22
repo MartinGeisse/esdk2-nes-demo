@@ -65,6 +65,12 @@ public final class Cpu {
 		return read(address) + (read(address + 1) << 8);
 	}
 
+	private int read16ZeroPage(int address) {
+		int low = read(address & 0xff);
+		int high = read((address + 1) & 0xff);
+		return low + (high << 8);
+	}
+
 	private int fetch() {
 		int data = read(pc);
 		pc++;
@@ -111,7 +117,7 @@ public final class Cpu {
 	}
 
 	private int fetchOperandAddressIndirectIndexed(int index) {
-		return read16(fetch()) + index;
+		return read16ZeroPage(fetch()) + index;
 	}
 
 	private int fetchOperandIndirectIndexed(int index) {
@@ -119,7 +125,7 @@ public final class Cpu {
 	}
 
 	private int fetchOperandAddressIndexedIndirect(int index) {
-		return read16((fetch() + index) & 0xff); // wraparound!
+		return read16ZeroPage(fetch() + index);
 	}
 
 	private int fetchOperandIndexedIndirect(int index) {
@@ -184,7 +190,6 @@ public final class Cpu {
 
 	public void step() {
 
-		/*
 		boolean debug = (pc > 0x800d);
 		if (debug) {
 			System.out.print("pc=" + toHex(pc, 4) + " a=" + toHex(a, 2) + " x=" + toHex(x, 2) + " y=" + toHex(y, 2));
@@ -198,12 +203,11 @@ public final class Cpu {
 				}
 			}
 		}
-		*/
 
 		int opcode = fetch();
-//		if (debug) {
-//			System.out.println(" opcode=" + toHex(opcode, 2) + " next = " + toHex(read(pc), 2) + ", " + toHex(read(pc + 1), 2));
-//		}
+		if (debug) {
+			System.out.println(" opcode=" + toHex(opcode, 2) + " next = " + toHex(read(pc), 2) + ", " + toHex(read(pc + 1), 2));
+		}
 
 		switch (opcode) {
 
@@ -216,7 +220,7 @@ public final class Cpu {
 				break;
 
 			case 0x05: // ORA - zero page
-				a |= read(fetchOperandAddressZeroPage());
+				a |= fetchOperandZeroPage();
 				setNZ(a);
 				break;
 
@@ -235,7 +239,7 @@ public final class Cpu {
 
 			case 0x0a: // ASL - accumulator
 				setFlag(FLAG_CARRY, (a & 128) != 0);
-				a <<= 1;
+				a = (a << 1) & 0xff;
 				setNZ(a);
 				break;
 
@@ -249,7 +253,7 @@ public final class Cpu {
 				break;
 
 			case 0x10: // BPL
-				fetchAndExecuteBranch(!getFlag(FLAG_NEGATIVE));
+				fetchAndPerformBranch(!getFlag(FLAG_NEGATIVE));
 				break;
 
 			case 0x11: // ORA - (indirect), Y
@@ -324,7 +328,7 @@ public final class Cpu {
 			{
 				boolean oldCarry = getFlag(FLAG_CARRY);
 				setFlag(FLAG_CARRY, (a & 128) != 0);
-				a = (a << 1) + (oldCarry ? 1 : 0);
+				a = ((a << 1) & 0xff) + (oldCarry ? 1 : 0);
 				setNZ(a);
 				break;
 			}
@@ -343,7 +347,7 @@ public final class Cpu {
 				break;
 
 			case 0x30: // BMI
-				fetchAndExecuteBranch(getFlag(FLAG_NEGATIVE));
+				fetchAndPerformBranch(getFlag(FLAG_NEGATIVE));
 				break;
 
 			case 0x31: // AND - (indirect), Y
@@ -426,7 +430,7 @@ public final class Cpu {
 				break;
 
 			case 0x50: // BVC
-				fetchAndExecuteBranch(!getFlag(FLAG_OVERFLOW));
+				fetchAndPerformBranch(!getFlag(FLAG_OVERFLOW));
 				break;
 
 			case 0x51: // EOR - (indirect), Y
@@ -466,11 +470,11 @@ public final class Cpu {
 				break;
 
 			case 0x61: // ADC - (indirect, X)
-				executeAdc(fetchOperandIndexedIndirect(x));
+				performAdc(fetchOperandIndexedIndirect(x));
 				break;
 
 			case 0x65: // ADC - zero page
-				executeAdc(fetchOperandZeroPage());
+				performAdc(fetchOperandZeroPage());
 				break;
 
 			case 0x66: // ROR - zero page
@@ -483,7 +487,7 @@ public final class Cpu {
 				break;
 
 			case 0x69: // ADC - immediate
-				executeAdc(fetch());
+				performAdc(fetch());
 				break;
 
 			case 0x6a: // ROR - accumulator
@@ -500,7 +504,7 @@ public final class Cpu {
 				break;
 
 			case 0x6d: // ADC - absolute
-				executeAdc(fetchOperandAbsolute());
+				performAdc(fetchOperandAbsolute());
 				break;
 
 			case 0x6e: // ROR - absolute
@@ -508,15 +512,15 @@ public final class Cpu {
 				break;
 
 			case 0x70: // BVS
-				fetchAndExecuteBranch(getFlag(FLAG_OVERFLOW));
+				fetchAndPerformBranch(getFlag(FLAG_OVERFLOW));
 				break;
 
 			case 0x71: // ADC - (indirect), Y
-				executeAdc(fetchOperandIndirectIndexed(y));
+				performAdc(fetchOperandIndirectIndexed(y));
 				break;
 
 			case 0x75: // ADC - zero page, X
-				executeAdc(fetchOperandZeroPageIndexed(x));
+				performAdc(fetchOperandZeroPageIndexed(x));
 				break;
 
 			case 0x76: // ROR - zero page, X
@@ -528,11 +532,11 @@ public final class Cpu {
 				break;
 
 			case 0x79: // ADC - absolute, Y
-				executeAdc(fetchOperandIndexed(y));
+				performAdc(fetchOperandIndexed(y));
 				break;
 
 			case 0x7d: // ADC - absolute, X
-				executeAdc(fetchOperandIndexed(x));
+				performAdc(fetchOperandIndexed(x));
 				break;
 
 			case 0x7e: // ROR - absolute, X
@@ -578,7 +582,7 @@ public final class Cpu {
 				break;
 
 			case 0x90: // BCC
-				fetchAndExecuteBranch(!getFlag(FLAG_CARRY));
+				fetchAndPerformBranch(!getFlag(FLAG_CARRY));
 				break;
 
 			case 0x91: // STA - (indirect), Y
@@ -676,7 +680,7 @@ public final class Cpu {
 				break;
 
 			case 0xb0: // BCS
-				fetchAndExecuteBranch(getFlag(FLAG_CARRY));
+				fetchAndPerformBranch(getFlag(FLAG_CARRY));
 				break;
 
 			case 0xb1: // LDA - (indirect), Y
@@ -785,7 +789,7 @@ public final class Cpu {
 			}
 
 			case 0xd0: // BNE
-				fetchAndExecuteBranch(!getFlag(FLAG_ZERO));
+				fetchAndPerformBranch(!getFlag(FLAG_ZERO));
 				break;
 
 			case 0xd1: // CMP - (indirect), y
@@ -831,7 +835,7 @@ public final class Cpu {
 				break;
 
 			case 0xe1: // SBC - (indirect, X)
-				executeSbc(fetchOperandIndexedIndirect(x));
+				performSbc(fetchOperandIndexedIndirect(x));
 				break;
 
 			case 0xe4: // CPX - zero page
@@ -839,7 +843,7 @@ public final class Cpu {
 				break;
 
 			case 0xe5: // SBC - zero page
-				executeSbc(fetchOperandZeroPage());
+				performSbc(fetchOperandZeroPage());
 				break;
 
 			case 0xe6: // INC - zero page
@@ -857,7 +861,7 @@ public final class Cpu {
 				break;
 
 			case 0xe9: // SBC - immediate
-				executeSbc(fetch());
+				performSbc(fetch());
 				break;
 
 			case 0xea: // NOP
@@ -868,7 +872,7 @@ public final class Cpu {
 				break;
 
 			case 0xed: // SBC - absolute
-				executeSbc(fetchOperandAbsolute());
+				performSbc(fetchOperandAbsolute());
 				break;
 
 			case 0xee: // INC - absolute
@@ -881,15 +885,15 @@ public final class Cpu {
 			}
 
 			case 0xf0: // BEQ
-				fetchAndExecuteBranch(getFlag(FLAG_ZERO));
+				fetchAndPerformBranch(getFlag(FLAG_ZERO));
 				break;
 
 			case 0xf1: // SBC - (indirect), Y
-				executeSbc(fetchOperandIndirectIndexed(y));
+				performSbc(fetchOperandIndirectIndexed(y));
 				break;
 
 			case 0xf5: // SBC - zero page, X
-				executeSbc(fetchOperandZeroPageIndexed(x));
+				performSbc(fetchOperandZeroPageIndexed(x));
 				break;
 
 			case 0xf6: // INC - zero page, X
@@ -906,11 +910,11 @@ public final class Cpu {
 				break;
 
 			case 0xf9: // SBC - absolute, Y
-				executeSbc(fetchOperandIndexed(y));
+				performSbc(fetchOperandIndexed(y));
 				break;
 
 			case 0xfd: // SBC - absolute, X
-				executeSbc(fetchOperandIndexed(x));
+				performSbc(fetchOperandIndexed(x));
 				break;
 
 			case 0xfe: // INC - absolute, X
@@ -927,7 +931,7 @@ public final class Cpu {
 		}
 	}
 
-	private void executeAdc(int operand) {
+	private void performAdc(int operand) {
 		int a2 = a + operand + (getFlag(FLAG_CARRY) ? 1 : 0);
 		setFlag(FLAG_CARRY, a2 > 255);
 		setFlag(FLAG_OVERFLOW, (a & 128) == (operand & 128) && (a & 128) != (a2 & 128));
@@ -935,7 +939,7 @@ public final class Cpu {
 		setNZ(a);
 	}
 
-	private void executeSbc(int operand) {
+	private void performSbc(int operand) {
 		int a2 = a - operand - (getFlag(FLAG_CARRY) ? 1 : 0);
 		setFlag(FLAG_CARRY, a2 >= 0); // borrow is carry inverted
 		setFlag(FLAG_OVERFLOW, (a & 128) != (operand & 128) && (a & 128) != (a2 & 128));
@@ -949,7 +953,7 @@ public final class Cpu {
 		setNZ(a2);
 	}
 
-	private void fetchAndExecuteBranch(boolean condition) {
+	private void fetchAndPerformBranch(boolean condition) {
 		int offset = (byte)fetch();
 		if (condition) {
 			pc += offset;
@@ -974,7 +978,7 @@ public final class Cpu {
 
 	private void performRol(int address) {
 		int oldValue = read(address);
-		int newValue = (oldValue << 1) & 0xff + (getFlag(FLAG_CARRY) ? 1 : 0);
+		int newValue = ((oldValue << 1) & 0xff) + (getFlag(FLAG_CARRY) ? 1 : 0);
 		setFlag(FLAG_CARRY, (oldValue & 128) != 0);
 		setNZ(newValue);
 		write(address, newValue);

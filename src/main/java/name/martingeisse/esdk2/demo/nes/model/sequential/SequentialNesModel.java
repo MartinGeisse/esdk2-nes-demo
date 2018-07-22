@@ -32,6 +32,12 @@ public class SequentialNesModel {
 					case 2:
 						return (byte) ppu.getStatusRegister();
 
+					case 4:
+						return (byte) ppu.readFromSprRam();
+
+					case 7:
+						return (byte) ppu.readFromVram();
+
 					default:
 						return 0;
 
@@ -49,6 +55,27 @@ public class SequentialNesModel {
 					case 1:
 						ppu.setMaskRegister(data & 0xff);
 						break;
+
+					case 3:
+						ppu.setSprRamAddressRegister(data & 0xff);
+						break;
+
+					case 4:
+						ppu.writeToSprRam(data & 0xff);
+						break;
+
+					case 5:
+						// TODO scroll
+						break;
+
+					case 6:
+						ppu.writeToVramAddressRegister(data & 0xff);
+						break;
+
+					case 7:
+						ppu.writeToVram(data & 0xff);
+						break;
+
 
 				}
 			}
