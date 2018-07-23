@@ -8,7 +8,7 @@ import name.martingeisse.esdk2.demo.nes.model.Constants;
 import name.martingeisse.esdk2.demo.nes.ui.Screen;
 
 /**
- *
+ * TODO "reading PPUStatus -- register 2 -- resets the address latch"
  */
 public class Ppu {
 
@@ -85,14 +85,15 @@ public class Ppu {
 	private final Screen screen;
 	private final Runnable vblankEdgeCallback;
 	private boolean vblank = false;
-	private int previousWriteValue = 0;
+	private int dynamicallyStoredWriteValue = 0;
 	private int controlRegister = 0;
 	private int maskRegister = 0;
 	private int sprRamAddressRegister = 0;
-	private int backgroundScrollRegister = 0;
+	private int scrollXRegister = 0;
+	private int scrollYRegister = 0;
 	private int vramAddressRegister = 0;
-	private int vramReadData = 0;
 	private byte[] sprRam = new byte[256];
+	private boolean writeToggle16 = false;
 
 	public Ppu(BusHandler busHandler, Screen screen, Runnable vblankEdgeCallback) {
 		if (busHandler == null) {
@@ -152,20 +153,32 @@ public class Ppu {
 		this.vblank = vblank;
 	}
 
+	public int getDynamicallyStoredWriteValue() {
+		return dynamicallyStoredWriteValue;
+	}
+
+	public void setDynamicallyStoredWriteValue(int dynamicallyStoredWriteValue) {
+		this.dynamicallyStoredWriteValue = dynamicallyStoredWriteValue;
+	}
+
 	public void setControlRegister(int controlRegister) {
-		this.previousWriteValue = this.controlRegister = controlRegister & 0xff;
+		// TODO the nametable bits found here are the highest order scroll bits
+		this.controlRegister = controlRegister & 0xff;
 	}
 
 	public void setMaskRegister(int maskRegister) {
-		this.previousWriteValue = this.maskRegister = maskRegister & 0xff;
+		this.maskRegister = maskRegister & 0xff;
 	}
 
-	public int getStatusRegister() {
-		return (previousWriteValue & 31) | (vblank ? 128 : 0);
+	public int readStatusRegister() {
+		writeToggle16 = false;
+		int result = (dynamicallyStoredWriteValue & 31) | (vblank ? 128 : 0);
+		vblank = false;
+		return result;
 	}
 
 	public void setSprRamAddressRegister(int sprRamAddressRegister) {
-		this.previousWriteValue = this.sprRamAddressRegister = sprRamAddressRegister & 0xff;
+		this.sprRamAddressRegister = sprRamAddressRegister & 0xff;
 	}
 
 	public void writeToSprRam(int data) {
@@ -174,32 +187,42 @@ public class Ppu {
 	}
 
 	public int readFromSprRam() {
-		int result = sprRam[sprRamAddressRegister] & 0xff;
-		sprRamAddressRegister = (sprRamAddressRegister + 1) & 0xff;
-		return result;
+		// this does not increment the address
+		return sprRam[sprRamAddressRegister] & 0xff;
 	}
 
-	public void setBackgroundScrollRegister(int backgroundScrollRegister) {
-		this.previousWriteValue = this.backgroundScrollRegister = backgroundScrollRegister & 0xff;
+	public void writeToScrollRegister(int value) {
+		if (writeToggle16) {
+			scrollYRegister = value & 0xff;
+		} else {
+			scrollXRegister = value & 0xff;
+		}
+		writeToggle16 = !writeToggle16;
 	}
 
 	public void writeToVramAddressRegister(int value) {
-		// my best guess how the VRAM address register handles two writes to build a 16-bit address
-		this.previousWriteValue = value & 0xff;
-		vramAddressRegister = (vramAddressRegister & 0xff) << 8 | value & 0xff;
+		if (writeToggle16) {
+			vramAddressRegister = ((vramAddressRegister & 0xff) << 8) + (value & 0xff);
+		} else {
+			vramAddressRegister = (vramAddressRegister & 0xff) + ((value & 0xff) << 8);
+		}
+		writeToggle16 = !writeToggle16;
 	}
 
 	public void writeToVram(int data) {
 		busHandler.write(vramAddressRegister, (byte)data);
-		int increment = (controlRegister & 4) == 0 ? 1 : 32;
-		vramAddressRegister = (vramAddressRegister + increment) & 0xffff;
+		incrementVramAddress();
 	}
 
 	public int readFromVram() {
-		// my best guess why the first byte read contains garbage
-		int result = vramReadData;
-		vramReadData = busHandler.read(vramAddressRegister);
+		int result = busHandler.read(vramAddressRegister);
+		incrementVramAddress();
 		return result;
+	}
+
+	private void incrementVramAddress() {
+		int increment = (controlRegister & 4) == 0 ? 1 : 32;
+		vramAddressRegister = (vramAddressRegister + increment) & 0xffff;
 	}
 
 }

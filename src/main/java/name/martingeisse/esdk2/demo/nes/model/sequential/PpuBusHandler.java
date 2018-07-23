@@ -14,6 +14,7 @@ public final class PpuBusHandler implements BusHandler {
 	private final CartridgeFileContents cartridgeFileContents;
 	private final byte[] nametableRam = new byte[0x1000];
 	private final byte[] paletteRam = new byte[32];
+	private int readDataRegister = 0;
 
 	public PpuBusHandler(CartridgeFileContents cartridgeFileContents) {
 		if (cartridgeFileContents == null) {
@@ -25,14 +26,27 @@ public final class PpuBusHandler implements BusHandler {
 	@Override
 	public byte read(int address) {
 		address = address & 0x3fff;
+
+		// TODO the following is not correctly emulated at the momoent:
+		// Reading palette data from $3F00-$3FFF works differently. The palette data is placed immediately on the
+		// data bus, and hence no dummy read is required. Reading the palettes still updates the internal buffer
+		// though, but the data placed in it is the mirrored nametable data that would appear "underneath" the
+		// palette. (Checking the PPU memory map should make this clearer.)
+
+		int previousReadDataRegister = readDataRegister;
 		if (address < 0x2000) {
-			return cartridgeFileContents.readChrRom(address);
-		} else if (address < 0x3f00) {
+			readDataRegister = cartridgeFileContents.readChrRom(address);
+		} else {
 			// TODO mirroring
-			return nametableRam[address & 0x03ff];
+			readDataRegister = nametableRam[address & 0x03ff];
+		}
+
+		if (address < 0x3f00) {
+			return (byte) previousReadDataRegister;
 		} else {
 			return paletteRam[address & 31];
 		}
+
 	}
 
 	@Override

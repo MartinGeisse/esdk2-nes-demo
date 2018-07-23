@@ -30,7 +30,8 @@ public class SequentialNesModel {
 				switch (address & 7) {
 
 					case 2:
-						return (byte) ppu.getStatusRegister();
+						// TODO Reading the status register will clear D7 mentioned above and also the address latch used by PPUSCROLL and PPUADDR. It does not clear the sprite 0 hit or overflow bit.
+						return (byte) ppu.readStatusRegister();
 
 					case 4:
 						return (byte) ppu.readFromSprRam();
@@ -39,13 +40,14 @@ public class SequentialNesModel {
 						return (byte) ppu.readFromVram();
 
 					default:
-						return 0;
+						return (byte) ppu.getDynamicallyStoredWriteValue();
 
 				}
 			}
 
 			@Override
 			protected void writeIo2(int address, byte data) {
+				ppu.setDynamicallyStoredWriteValue(data);
 				switch (address & 7) {
 
 					case 0:
@@ -61,11 +63,14 @@ public class SequentialNesModel {
 						break;
 
 					case 4:
+						// note: we may have to ignore writes during rendering since the original NES does
+						// something similar
 						ppu.writeToSprRam(data & 0xff);
 						break;
 
 					case 5:
-						// TODO scroll
+						// TODO Changes made to the vertical scroll during rendering will only take effect on the next frame.
+						ppu.writeToScrollRegister(data & 0xff);
 						break;
 
 					case 6:

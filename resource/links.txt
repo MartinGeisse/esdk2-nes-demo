@@ -1,0 +1,5 @@
+http://forum.6502.org/viewtopic.php?t=546
+https://patpend.net/technical/nes/nestech.doc.txt
+https://github.com/PeterLemon/NES/blob/master/HelloWorld/HelloWorld.asm
+https://github.com/PeterLemon/NES/blob/master/HelloWorld/LIB/NES.INC
+https://wiki.nesdev.com/w/index.php/PPU_programmer_reference
