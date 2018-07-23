@@ -548,7 +548,7 @@ public final class Cpu {
 				break;
 
 			case 0x84: // STY - zero page
-				write(fetchOperandAddressZeroPage(), x);
+				write(fetchOperandAddressZeroPage(), y);
 				break;
 
 			case 0x85: // STA - zero page
@@ -570,7 +570,7 @@ public final class Cpu {
 				break;
 
 			case 0x8c: // STY - absolute
-				write(fetchOperandAddressAbsolute(), x);
+				write(fetchOperandAddressAbsolute(), y);
 				break;
 
 			case 0x8d: // STA - absolute
@@ -590,7 +590,7 @@ public final class Cpu {
 				break;
 
 			case 0x94: // STY - zero page, X
-				write(fetchOperandAddressIndexed(x), x);
+				write(fetchOperandAddressZeroPageIndexed(x), y);
 				break;
 
 			case 0x95: // STA - zero page, X
@@ -598,7 +598,7 @@ public final class Cpu {
 				break;
 
 			case 0x96: // STX - zero page, Y
-				write(fetchOperandAddressIndexed(y), x);
+				write(fetchOperandAddressZeroPageIndexed(y), x);
 				break;
 
 			case 0x98: // TYA
@@ -713,8 +713,8 @@ public final class Cpu {
 				break;
 
 			case 0xba: // TSX
-				sp = x;
-				setNZ(sp);
+				x = sp;
+				setNZ(x);
 				break;
 
 			case 0xbc: // LDY - absolute, X
@@ -749,13 +749,8 @@ public final class Cpu {
 				break;
 
 			case 0xc6: // DEC - zero page
-			{
-				int address = fetchOperandAddressZeroPage();
-				int newValue = (read(address) - 1) & 0xff;
-				setNZ(newValue);
-				write(address, newValue);
+				performDec(fetchOperandAddressZeroPage());
 				break;
-			}
 
 			case 0xc8: // INY
 				y = (y + 1) & 0xff;
@@ -780,13 +775,8 @@ public final class Cpu {
 				break;
 
 			case 0xce: // DEC - absolute
-			{
-				int address = fetchOperandAddressAbsolute();
-				int newValue = (read(address) - 1) & 0xff;
-				setNZ(newValue);
-				write(address, newValue);
+				performDec(fetchOperandAddressAbsolute());
 				break;
-			}
 
 			case 0xd0: // BNE
 				fetchAndPerformBranch(!getFlag(FLAG_ZERO));
@@ -801,13 +791,8 @@ public final class Cpu {
 				break;
 
 			case 0xd6: // DEC - zero page, X
-			{
-				int address = fetchOperandAddressZeroPageIndexed(x);
-				int newValue = (read(address) - 1) & 0xff;
-				setNZ(newValue);
-				write(address, newValue);
+				performDec(fetchOperandAddressZeroPageIndexed(x));
 				break;
-			}
 
 			case 0xd8: // CLD
 				clearFlag(FLAG_DECIMAL);
@@ -822,13 +807,8 @@ public final class Cpu {
 				break;
 
 			case 0xde: // DEC - absolute, X
-			{
-				int address = fetchOperandAddressIndexed(x);
-				int newValue = (read(address) - 1) & 0xff;
-				setNZ(newValue);
-				write(address, newValue);
+				performDec(fetchOperandAddressIndexed(x));
 				break;
-			}
 
 			case 0xe0: // CPX - immediate
 				performCmp(x, fetch());
@@ -847,13 +827,8 @@ public final class Cpu {
 				break;
 
 			case 0xe6: // INC - zero page
-			{
-				int address = fetchOperandAddressZeroPage();
-				int newValue = (read(address) + 1) & 0xff;
-				setNZ(newValue);
-				write(address, newValue);
+				performInc(fetchOperandAddressZeroPage());
 				break;
-			}
 
 			case 0xe8: // INX
 				x = (x + 1) & 0xff;
@@ -876,13 +851,8 @@ public final class Cpu {
 				break;
 
 			case 0xee: // INC - absolute
-			{
-				int address = fetchOperandAddressAbsolute();
-				int newValue = (read(address) + 1) & 0xff;
-				setNZ(newValue);
-				write(address, newValue);
+				performInc(fetchOperandAddressAbsolute());
 				break;
-			}
 
 			case 0xf0: // BEQ
 				fetchAndPerformBranch(getFlag(FLAG_ZERO));
@@ -897,13 +867,8 @@ public final class Cpu {
 				break;
 
 			case 0xf6: // INC - zero page, X
-			{
-				int address = fetchOperandAddressZeroPageIndexed(x);
-				int newValue = (read(address) + 1) & 0xff;
-				setNZ(newValue);
-				write(address, newValue);
+				performInc(fetchOperandAddressZeroPageIndexed(x));
 				break;
-			}
 
 			case 0xf8: // SED
 				setFlag(FLAG_DECIMAL);
@@ -918,13 +883,8 @@ public final class Cpu {
 				break;
 
 			case 0xfe: // INC - absolute, X
-			{
-				int address = fetchOperandAddressIndexed(x);
-				int newValue = (read(address) + 1) & 0xff;
-				setNZ(newValue);
-				write(address, newValue);
+				performInc(fetchOperandAddressIndexed(x));
 				break;
-			}
 
 			default:
 				throw new RuntimeException("unknown opcode: " + opcode);
@@ -964,6 +924,18 @@ public final class Cpu {
 		int oldValue = read(address);
 		setFlag(FLAG_CARRY, (oldValue & 128) != 0);
 		int newValue = (oldValue << 1) & 0xff;
+		setNZ(newValue);
+		write(address, newValue);
+	}
+
+	private void performInc(int address) {
+		int newValue = (read(address) + 1) & 0xff;
+		setNZ(newValue);
+		write(address, newValue);
+	}
+
+	private void performDec(int address) {
+		int newValue = (read(address) - 1) & 0xff;
 		setNZ(newValue);
 		write(address, newValue);
 	}
