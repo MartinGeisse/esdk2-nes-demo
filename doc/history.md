@@ -63,3 +63,5 @@ such as the shared low/high byte toggle when loading registers 0x2005 and 0x2006
 
 Lots of PPU model bug fixes. (Note that all this is still sequential simulation only -- no RTL yet).
 The "Hello world" demo finally runs correctly.
+
+Also, I added a stub for the APU and implemented controller 1 input. Seems to work.
