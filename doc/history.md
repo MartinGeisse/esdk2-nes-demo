@@ -53,3 +53,8 @@ recognize the jump to itself and simulate passive sleep instead of active sleep 
 at the end of a frame, when waiting for the next interrupt or NMI to happen).
 
 Also skimmed the CPU code again to find bugs, and fixed some.
+
+# Day 12
+
+Lots of PPU model bug fixes. (Note that all this is still sequential simulation only
+-- no RTL yet). The "Hello world" demo finally runs correctly.

@@ -81,7 +81,7 @@ public class Ppu {
 		0x000000,
 		0x000000
 	};
-	private final BusHandler busHandler;
+	private final PpuBusHandler busHandler;
 	private final Screen screen;
 	private final Runnable vblankEdgeCallback;
 	private boolean vblank = false;
@@ -95,7 +95,7 @@ public class Ppu {
 	private byte[] sprRam = new byte[256];
 	private boolean writeToggle16 = false;
 
-	public Ppu(BusHandler busHandler, Screen screen, Runnable vblankEdgeCallback) {
+	public Ppu(PpuBusHandler busHandler, Screen screen, Runnable vblankEdgeCallback) {
 		if (busHandler == null) {
 			throw new IllegalArgumentException("busHandler cannot be null");
 		}
@@ -111,19 +111,20 @@ public class Ppu {
 		int tileY = row >> 3;
 		int pixelY = row & 7;
 		int patternTableBaseAddress = (controlRegister & 16) == 0 ? 0x0000 : 0x1000;
-		int attributeTableBaseAddress = patternTableBaseAddress + 960;
+		int nameTableBaseAddress = 0x2000;
+		int attributeTableBaseAddress = nameTableBaseAddress + 960;
 		for (int tileX = 0; tileX < Constants.NAME_TABLE_WIDTH; tileX++) {
 
 			// read tile code from the name table
-			int tileAddress = 0x2000 + (tileY * 32 + tileX);
-			int tileCode = busHandler.read(tileAddress) & 0xff;
+			int tileAddress = nameTableBaseAddress + (tileY * 32 + tileX);
+			int tileCode = busHandler.read(tileAddress, false) & 0xff;
 
-			// read pattern from the pattern table TODO patterns are corrupted
-			int patternLine1 = busHandler.read(patternTableBaseAddress + (tileCode << 4) + pixelY);
-			int patternLine2 = busHandler.read(patternTableBaseAddress + (tileCode << 4) + pixelY + 8);
+			// read pattern from the pattern table
+			int patternLine1 = busHandler.read(patternTableBaseAddress + (tileCode << 4) + pixelY, false);
+			int patternLine2 = busHandler.read(patternTableBaseAddress + (tileCode << 4) + pixelY + 8, false);
 
 			// read attributes from the attribute table
-			int attributeByte = busHandler.read(attributeTableBaseAddress + ((tileY >> 2) << 3) + (tileX >> 2));
+			int attributeByte = busHandler.read(attributeTableBaseAddress + ((tileY >> 2) << 3) + (tileX >> 2), false);
 			int shiftAmount = ((tileX & 2) == 0 ? 0 : 2) + ((tileY & 2) == 0 ? 0 : 4);
 			int upperTwoColorIndexBitsPreshifted = ((attributeByte >> shiftAmount) & 3) << 2;
 
@@ -135,7 +136,7 @@ public class Ppu {
 
 				// determine color
 				int localColorIndex = lowerTwoColorIndexBits == 0 ? 0 : (upperTwoColorIndexBitsPreshifted | lowerTwoColorIndexBits);
-				int globalColorIndex = busHandler.read(0x3f00 + localColorIndex);
+				int globalColorIndex = busHandler.read(0x3f00 + localColorIndex, false);
 				int color = systemPalette[globalColorIndex];
 
 				screen.setPixel(tileX * Constants.TILE_WIDTH + pixelX, tileY * Constants.TILE_HEIGHT + pixelY, color);
@@ -182,7 +183,7 @@ public class Ppu {
 	}
 
 	public void writeToSprRam(int data) {
-		sprRam[sprRamAddressRegister] = (byte)data;
+		sprRam[sprRamAddressRegister] = (byte) data;
 		sprRamAddressRegister = (sprRamAddressRegister + 1) & 0xff;
 	}
 
@@ -212,12 +213,12 @@ public class Ppu {
 	}
 
 	public void writeToVram(int data) {
-		busHandler.write(vramAddressRegister, (byte)data);
+		busHandler.write(vramAddressRegister, (byte) data);
 		incrementVramAddress();
 	}
 
 	public int readFromVram() {
-		int result = busHandler.read(vramAddressRegister);
+		int result = busHandler.read(vramAddressRegister, true);
 		incrementVramAddress();
 		return result;
 	}

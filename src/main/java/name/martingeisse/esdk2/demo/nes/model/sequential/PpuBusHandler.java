@@ -9,7 +9,7 @@ import name.martingeisse.esdk2.demo.nes.model.CartridgeFileContents;
 /**
  *
  */
-public final class PpuBusHandler implements BusHandler {
+public final class PpuBusHandler {
 
 	private final CartridgeFileContents cartridgeFileContents;
 	private final byte[] nametableRam = new byte[0x1000];
@@ -23,15 +23,8 @@ public final class PpuBusHandler implements BusHandler {
 		this.cartridgeFileContents = cartridgeFileContents;
 	}
 
-	@Override
-	public byte read(int address) {
+	public byte read(int address, boolean latched) {
 		address = address & 0x3fff;
-
-		// TODO the following is not correctly emulated at the momoent:
-		// Reading palette data from $3F00-$3FFF works differently. The palette data is placed immediately on the
-		// data bus, and hence no dummy read is required. Reading the palettes still updates the internal buffer
-		// though, but the data placed in it is the mirrored nametable data that would appear "underneath" the
-		// palette. (Checking the PPU memory map should make this clearer.)
 
 		int previousReadDataRegister = readDataRegister;
 		if (address < 0x2000) {
@@ -42,14 +35,17 @@ public final class PpuBusHandler implements BusHandler {
 		}
 
 		if (address < 0x3f00) {
-			return (byte) previousReadDataRegister;
+			if (latched) {
+				return (byte) previousReadDataRegister;
+			} else {
+				return (byte) readDataRegister;
+			}
 		} else {
 			return paletteRam[address & 31];
 		}
 
 	}
 
-	@Override
 	public void write(int address, byte data) {
 
 
