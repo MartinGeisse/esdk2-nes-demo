@@ -119,19 +119,19 @@ public class Ppu {
 			int tileCode = busHandler.read(tileAddress) & 0xff;
 
 			// read pattern from the pattern table TODO patterns are corrupted
-			int patternLine1 = busHandler.read(patternTableBaseAddress + (tileCode << 4) + (pixelY << 1));
-			int patternLine2 = busHandler.read(patternTableBaseAddress + (tileCode << 4) + (pixelY << 1) + 1);
+			int patternLine1 = busHandler.read(patternTableBaseAddress + (tileCode << 4) + pixelY);
+			int patternLine2 = busHandler.read(patternTableBaseAddress + (tileCode << 4) + pixelY + 8);
 
 			// read attributes from the attribute table
-			int attributeByte = busHandler.read(attributeTableBaseAddress + ((tileY >> 2) << 3) + tileX >> 2);
+			int attributeByte = busHandler.read(attributeTableBaseAddress + ((tileY >> 2) << 3) + (tileX >> 2));
 			int shiftAmount = ((tileX & 2) == 0 ? 0 : 2) + ((tileY & 2) == 0 ? 0 : 4);
 			int upperTwoColorIndexBitsPreshifted = ((attributeByte >> shiftAmount) & 3) << 2;
 
 			for (int pixelX = 0; pixelX < Constants.TILE_WIDTH; pixelX++) {
 
 				int columnMask = (128 >> pixelX);
-				int lowerTwoColorIndexBits = ((patternLine1 & columnMask) != 0 ? 2 : 0) +
-					((patternLine2 & columnMask) != 0 ? 1 : 0);
+				int lowerTwoColorIndexBits = ((patternLine1 & columnMask) != 0 ? 1 : 0) +
+					((patternLine2 & columnMask) != 0 ? 2 : 0);
 
 				// determine color
 				int localColorIndex = lowerTwoColorIndexBits == 0 ? 0 : (upperTwoColorIndexBitsPreshifted | lowerTwoColorIndexBits);
