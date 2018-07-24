@@ -53,3 +53,9 @@ recognize the jump to itself and simulate passive sleep instead of active sleep 
 at the end of a frame, when waiting for the next interrupt or NMI to happen).
 
 Also skimmed the CPU code again to find bugs, and fixed some.
+
+# Day 12
+
+Fixed various bugs in the CPU and the PPU. Especially the PPU has some non-obvious quirks,
+such as the shared low/high byte toggle when loading registers 0x2005 and 0x2006.
+
