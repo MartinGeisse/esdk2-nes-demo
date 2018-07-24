@@ -2,6 +2,8 @@ package name.martingeisse.esdk2.demo.nes.model.sequential;
 
 import name.martingeisse.esdk2.demo.nes.model.Constants;
 
+import java.util.HashSet;
+
 /**
  *
  */
@@ -188,11 +190,157 @@ public final class Cpu {
 		return s.substring(s.length() - digits);
 	}
 
+	private static final boolean[] silencedLocations = new boolean[0x10000];
+	static {
+		silencedLocations[0xc28f] = true;
+		silencedLocations[0xc291] = true;
+		silencedLocations[0xc5f4] = true;
+
+		silencedLocations[0xc28f] = true;
+		silencedLocations[0xc291] = true;
+		silencedLocations[0xc28f] = true;
+
+		silencedLocations[0xc009] = true;
+		silencedLocations[0xc00c] = true;
+
+		silencedLocations[0xc00e] = true;
+		silencedLocations[0xc011] = true;
+
+		silencedLocations[0xc081] = true;
+		silencedLocations[0xc084] = true;
+		silencedLocations[0xc086] = true;
+		silencedLocations[0xc089] = true;
+		silencedLocations[0xc08b] = true;
+		silencedLocations[0xc08c] = true;
+		silencedLocations[0xc08d] = true;
+		silencedLocations[0xc08e] = true;
+		silencedLocations[0xc090] = true;
+		silencedLocations[0xc091] = true;
+		silencedLocations[0xc093] = true;
+		silencedLocations[0xc094] = true;
+		silencedLocations[0xc096] = true;
+		silencedLocations[0xc097] = true;
+		silencedLocations[0xc099] = true;
+		silencedLocations[0xc261] = true;
+		silencedLocations[0xc263] = true;
+		silencedLocations[0xc264] = true;
+		silencedLocations[0xc266] = true;
+		silencedLocations[0xc267] = true;
+		silencedLocations[0xc269] = true;
+		silencedLocations[0xc26c] = true;
+		silencedLocations[0xc26e] = true;
+		silencedLocations[0xc271] = true;
+		silencedLocations[0xc273] = true;
+		silencedLocations[0xc276] = true;
+		silencedLocations[0xc278] = true;
+		silencedLocations[0xc279] = true;
+		silencedLocations[0xc27a] = true;
+		silencedLocations[0xc27c] = true;
+		silencedLocations[0xc27e] = true;
+		silencedLocations[0xc281] = true;
+		silencedLocations[0xc282] = true;
+		silencedLocations[0xc283] = true;
+		silencedLocations[0xc285] = true;
+		silencedLocations[0xc287] = true;
+		silencedLocations[0xc28a] = true;
+		silencedLocations[0xc28d] = true;
+		silencedLocations[0xc293] = true;
+		silencedLocations[0xc294] = true;
+		silencedLocations[0xc296] = true;
+		silencedLocations[0xc299] = true;
+		silencedLocations[0xc29c] = true;
+		silencedLocations[0xc29e] = true;
+		silencedLocations[0xc2a1] = true;
+		silencedLocations[0xc2a3] = true;
+		silencedLocations[0xc2a6] = true;
+		silencedLocations[0xc5af] = true;
+		silencedLocations[0xc5b0] = true;
+		silencedLocations[0xc5b1] = true;
+		silencedLocations[0xc5b2] = true;
+		silencedLocations[0xc5b5] = true;
+		silencedLocations[0xc5b7] = true;
+		silencedLocations[0xc5ba] = true;
+		silencedLocations[0xc5bc] = true;
+		silencedLocations[0xc5bf] = true;
+		silencedLocations[0xc5c1] = true;
+		silencedLocations[0xc5c3] = true;
+		silencedLocations[0xc5c6] = true;
+		silencedLocations[0xc5c9] = true;
+		silencedLocations[0xc5cb] = true;
+		silencedLocations[0xc5ce] = true;
+		silencedLocations[0xc5d0] = true;
+		silencedLocations[0xc5d3] = true;
+		silencedLocations[0xc5d5] = true;
+		silencedLocations[0xc5d8] = true;
+		silencedLocations[0xc5d9] = true;
+		silencedLocations[0xc5dc] = true;
+		silencedLocations[0xc5df] = true;
+		silencedLocations[0xc5e0] = true;
+		silencedLocations[0xc5e2] = true;
+		silencedLocations[0xc5e3] = true;
+		silencedLocations[0xc5e5] = true;
+		silencedLocations[0xc5e7] = true;
+		silencedLocations[0xc5e8] = true;
+		silencedLocations[0xc5ea] = true;
+		silencedLocations[0xc5ec] = true;
+		silencedLocations[0xc5ee] = true;
+		silencedLocations[0xc5f0] = true;
+		silencedLocations[0xc5f1] = true;
+		silencedLocations[0xc5f2] = true;
+		silencedLocations[0xc5f3] = true;
+
+		silencedLocations[0xc0ac] = true;
+		silencedLocations[0xc66f] = true;
+		silencedLocations[0xc671] = true;
+		silencedLocations[0xc674] = true;
+		silencedLocations[0xc676] = true;
+		silencedLocations[0xc679] = true;
+		silencedLocations[0xc67b] = true;
+		silencedLocations[0xc67e] = true;
+		silencedLocations[0xc680] = true;
+		silencedLocations[0xc683] = true;
+		silencedLocations[0xc685] = true;
+		silencedLocations[0xc688] = true;
+		silencedLocations[0xc0af] = true;
+		silencedLocations[0xc0b1] = true;
+		silencedLocations[0xc0b3] = true;
+		silencedLocations[0xc0b5] = true;
+
+		silencedLocations[0xc0bd] = true;
+		silencedLocations[0xc689] = true;
+		silencedLocations[0xc68b] = true;
+		silencedLocations[0xc68e] = true;
+		silencedLocations[0xc690] = true;
+		silencedLocations[0xc693] = true;
+		silencedLocations[0xc695] = true;
+		silencedLocations[0xc698] = true;
+		silencedLocations[0xc69a] = true;
+		silencedLocations[0xc69d] = true;
+		silencedLocations[0xc69f] = true;
+		silencedLocations[0xc6a2] = true;
+		silencedLocations[0xc0c0] = true;
+		silencedLocations[0xc0c2] = true;
+		silencedLocations[0xc0c4] = true;
+		silencedLocations[0xc0ed] = true;
+		silencedLocations[0xc0ef] = true;
+		silencedLocations[0xc0f0] = true;
+		silencedLocations[0xc0f1] = true;
+		silencedLocations[0xc0f4] = true;
+		silencedLocations[0xc0f7] = true;
+		silencedLocations[0xc0fa] = true;
+		silencedLocations[0xc0fd] = true;
+		silencedLocations[0xc0ff] = true;
+		silencedLocations[0xc100] = true;
+		silencedLocations[0xc102] = true;
+		silencedLocations[0xc103] = true;
+		silencedLocations[0xc105] = true;
+		silencedLocations[0xc107] = true;
+	}
+
 	public void step() {
 
 		// boolean debug = true;//(pc > 0x800b) && (pc != 0x8070);
-		// boolean debug = (pc != 0xc28f) && (pc != 0xc291) && (pc != 0xc5f4);
-		boolean debug = false;
+		boolean debug = !silencedLocations[pc];
 		if (debug) {
 			System.out.print("pc=" + toHex(pc, 4) + " a=" + toHex(a, 2) + " x=" + toHex(x, 2) + " y=" + toHex(y, 2));
 			System.out.print(" sp=" + toHex(sp, 2) + " status: ");
