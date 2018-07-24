@@ -47,10 +47,6 @@ public final class PpuBusHandler {
 	}
 
 	public void write(int address, byte data) {
-
-
-		System.out.println("PPU write: address = " + toHex(address, 4) + ", data = " + toHex(data, 2));
-
 		address = address & 0x3fff;
 		if (address < 0x2000) {
 			// ignore -- it's a ROM

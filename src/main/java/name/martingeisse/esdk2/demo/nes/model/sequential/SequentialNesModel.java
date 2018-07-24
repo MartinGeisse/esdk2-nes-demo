@@ -17,6 +17,9 @@ public class SequentialNesModel {
 	private final PpuBusHandler ppuBusHandler;
 	private final Ppu ppu;
 
+	private final Apu apu;
+	private final InputPorts inputPorts;
+
 	public SequentialNesModel(CartridgeFileContents cartridgeFileContents) {
 		if (cartridgeFileContents == null) {
 			throw new IllegalArgumentException("cartridgeFileContents cannot be null");
@@ -85,14 +88,38 @@ public class SequentialNesModel {
 				}
 			}
 
+			// TODO button order A, B, Select, Start, Up, Down, Left, Right
+			// https://wiki.nesdev.com/w/index.php/Input_devices
+			// https://wiki.nesdev.com/w/index.php/Standard_controller
+			// https://wiki.nesdev.com/w/index.php/Controller_port_registers
+			// https://wiki.nesdev.com/w/index.php/Controller_port_pinout
+			// https://wiki.nesdev.com/w/index.php/Controller_Reading
+
 			@Override
 			protected byte readIo4(int address) {
-				return 0;
+				address = address & 0x1f;
+				if (address == 0x14) {
+					// sprite DMA
+					return 0;
+				} else if (address == 0x16) {
+					return inputPorts.read16();
+				} else if (address == 0x17) {
+					return inputPorts.read17();
+				} else {
+					return apu.read(address);
+				}
 			}
 
 			@Override
 			protected void writeIo4(int address, byte data) {
-
+				address = address & 0x1f;
+				if (address == 0x14) {
+					// TODO sprite DMA
+				} else if (address == 0x16) {
+					inputPorts.write16(data);
+				} else {
+					apu.write(address, data);
+				}
 			}
 
 		};
@@ -101,6 +128,9 @@ public class SequentialNesModel {
 		this.screen = new Screen();
 		this.ppuBusHandler = new PpuBusHandler(cartridgeFileContents);
 		this.ppu = new Ppu(ppuBusHandler, screen, cpu::fireNmi);
+
+		this.apu = new Apu();
+		this.inputPorts = new InputPorts();
 	}
 
 	public void frame() {

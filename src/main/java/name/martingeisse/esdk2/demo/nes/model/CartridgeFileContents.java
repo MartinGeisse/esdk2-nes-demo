@@ -43,7 +43,7 @@ public final class CartridgeFileContents {
 			if (mapperNumber != 0) {
 				throw new CartridgeFileFormatException("ROM mappers not supported");
 			}
-			if (numberOfPrgRomBanks != 2 || numberOfChrRomBanks != 1 || numberOfRamBanks != 0) {
+			if ((numberOfPrgRomBanks != 1 && numberOfPrgRomBanks != 2) || numberOfChrRomBanks != 1 || numberOfRamBanks != 0) {
 				throw new CartridgeFileFormatException("this version only supports 2 PRG banks / 1 CHR bank / 0 RAM banks");
 			}
 
@@ -55,9 +55,17 @@ public final class CartridgeFileContents {
 			}
 
 			// read PRG-ROM
-			this.prgRom = new byte[16 * 1024 * numberOfPrgRomBanks];
+			byte[] prgRom = new byte[16 * 1024 * numberOfPrgRomBanks];
 			if (in.read(prgRom) != prgRom.length) {
 				throw new CartridgeFileFormatException("unexpected EOF in PRG-ROM contents");
+			}
+			if (numberOfPrgRomBanks == 1) {
+				numberOfPrgRomBanks = 2;
+				this.prgRom = new byte[prgRom.length * 2];
+				System.arraycopy(prgRom, 0, this.prgRom, 0, prgRom.length);
+				System.arraycopy(prgRom, 0, this.prgRom, prgRom.length, prgRom.length);
+			} else {
+				this.prgRom = prgRom;
 			}
 
 			// read CHR-ROM
