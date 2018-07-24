@@ -190,7 +190,9 @@ public final class Cpu {
 
 	public void step() {
 
-		boolean debug = false;//(pc > 0x800b) && (pc != 0x8070);
+		// boolean debug = true;//(pc > 0x800b) && (pc != 0x8070);
+		// boolean debug = (pc != 0xc28f) && (pc != 0xc291) && (pc != 0xc5f4);
+		boolean debug = false;
 		if (debug) {
 			System.out.print("pc=" + toHex(pc, 4) + " a=" + toHex(a, 2) + " x=" + toHex(x, 2) + " y=" + toHex(y, 2));
 			System.out.print(" sp=" + toHex(sp, 2) + " status: ");
@@ -212,7 +214,13 @@ public final class Cpu {
 		switch (opcode) {
 
 			case 0x00: // BRK
-				throw new UnsupportedOperationException("BRK not yet implemented");
+				fetch();
+				push(pc >> 8);
+				push(pc & 0xff);
+				push(status | FLAG_BREAK);
+				pc = read16(Constants.INTERRUPT_VECTOR_LOCATION);
+				setFlag(FLAG_INTERRUPT_DISABLE);
+				break;
 
 			case 0x01: // ORA - (indirect, X)
 				a |= fetchOperandIndexedIndirect(x);
@@ -500,7 +508,8 @@ public final class Cpu {
 			}
 
 			case 0x6c: // JMP - indirect
-				pc = fetchOperandAddressIndexedIndirect(0);
+				// this is not zero page indirect, as the other indirect addressing modes are, but 16-bit indirect
+				pc = read16(fetch16());
 				break;
 
 			case 0x6d: // ADC - absolute
@@ -900,7 +909,7 @@ public final class Cpu {
 	}
 
 	private void performSbc(int operand) {
-		int a2 = a - operand - (getFlag(FLAG_CARRY) ? 1 : 0);
+		int a2 = a - operand - (getFlag(FLAG_CARRY) ? 0 : 1);
 		setFlag(FLAG_CARRY, a2 >= 0); // borrow is carry inverted
 		setFlag(FLAG_OVERFLOW, (a & 128) != (operand & 128) && (a & 128) != (a2 & 128));
 		a = a2 & 0xff;
