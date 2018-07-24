@@ -59,3 +59,7 @@ Also skimmed the CPU code again to find bugs, and fixed some.
 Fixed various bugs in the CPU and the PPU. Especially the PPU has some non-obvious quirks,
 such as the shared low/high byte toggle when loading registers 0x2005 and 0x2006.
 
+# Day 13
+
+Lots of PPU model bug fixes. (Note that all this is still sequential simulation only -- no RTL yet).
+The "Hello world" demo finally runs correctly.
