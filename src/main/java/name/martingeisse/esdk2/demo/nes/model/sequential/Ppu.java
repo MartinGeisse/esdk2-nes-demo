@@ -114,11 +114,11 @@ public class Ppu {
 		int attributeTableBaseAddress = patternTableBaseAddress + 960;
 		for (int tileX = 0; tileX < Constants.NAME_TABLE_WIDTH; tileX++) {
 
-			// read tile code from the name table TODO does not work -- always reads 32 despite there being other tile codes
-			int tileAddress = 0x2000 + (tileY * 32 + tileX) & 0xff;
-			int tileCode = busHandler.read(tileAddress);
+			// read tile code from the name table
+			int tileAddress = 0x2000 + (tileY * 32 + tileX);
+			int tileCode = busHandler.read(tileAddress) & 0xff;
 
-			// read pattern from the pattern table
+			// read pattern from the pattern table TODO patterns are corrupted
 			int patternLine1 = busHandler.read(patternTableBaseAddress + (tileCode << 4) + (pixelY << 1));
 			int patternLine2 = busHandler.read(patternTableBaseAddress + (tileCode << 4) + (pixelY << 1) + 1);
 
