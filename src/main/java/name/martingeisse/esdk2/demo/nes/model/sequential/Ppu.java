@@ -114,7 +114,7 @@ public class Ppu {
 		int attributeTableBaseAddress = patternTableBaseAddress + 960;
 		for (int tileX = 0; tileX < Constants.NAME_TABLE_WIDTH; tileX++) {
 
-			// read tile code from the name table
+			// read tile code from the name table TODO does not work -- always reads 32 despite there being other tile codes
 			int tileAddress = 0x2000 + (tileY * 32 + tileX) & 0xff;
 			int tileCode = busHandler.read(tileAddress);
 
@@ -202,8 +202,10 @@ public class Ppu {
 
 	public void writeToVramAddressRegister(int value) {
 		if (writeToggle16) {
-			vramAddressRegister = ((vramAddressRegister & 0xff) << 8) + (value & 0xff);
+			// write to low byte
+			vramAddressRegister = (vramAddressRegister & 0xff00) + (value & 0xff);
 		} else {
+			// write to high byte
 			vramAddressRegister = (vramAddressRegister & 0xff) + ((value & 0xff) << 8);
 		}
 		writeToggle16 = !writeToggle16;

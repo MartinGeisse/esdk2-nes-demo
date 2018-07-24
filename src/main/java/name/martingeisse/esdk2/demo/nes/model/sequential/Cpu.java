@@ -190,7 +190,7 @@ public final class Cpu {
 
 	public void step() {
 
-		boolean debug = (pc > 0x800d);
+		boolean debug = (pc > 0x800b) && (pc != 0x8070);
 		if (debug) {
 			System.out.print("pc=" + toHex(pc, 4) + " a=" + toHex(a, 2) + " x=" + toHex(x, 2) + " y=" + toHex(y, 2));
 			System.out.print(" sp=" + toHex(sp, 2) + " status: ");

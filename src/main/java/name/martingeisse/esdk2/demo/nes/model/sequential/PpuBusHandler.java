@@ -51,6 +51,10 @@ public final class PpuBusHandler implements BusHandler {
 
 	@Override
 	public void write(int address, byte data) {
+
+
+		System.out.println("PPU write: address = " + toHex(address, 4) + ", data = " + toHex(data, 2));
+
 		address = address & 0x3fff;
 		if (address < 0x2000) {
 			// ignore -- it's a ROM
@@ -60,6 +64,11 @@ public final class PpuBusHandler implements BusHandler {
 		} else {
 			paletteRam[address & 31] = data;
 		}
+	}
+
+	private String toHex(int value, int digits) {
+		String s = "00000000" + Integer.toHexString(value);
+		return s.substring(s.length() - digits);
 	}
 
 }
