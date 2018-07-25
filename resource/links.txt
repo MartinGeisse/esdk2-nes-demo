@@ -3,3 +3,4 @@ https://patpend.net/technical/nes/nestech.doc.txt
 https://github.com/PeterLemon/NES/blob/master/HelloWorld/HelloWorld.asm
 https://github.com/PeterLemon/NES/blob/master/HelloWorld/LIB/NES.INC
 https://wiki.nesdev.com/w/index.php/PPU_programmer_reference
+https://github.com/christopherpow/nes-test-roms/blob/master/other/nestest.log

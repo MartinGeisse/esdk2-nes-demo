@@ -11,11 +11,15 @@ public final class Cpu {
 
 	public static final int FLAG_NEGATIVE = 128;
 	public static final int FLAG_OVERFLOW = 64;
+	public static final int FLAG_DUMMY = 32;
 	public static final int FLAG_BREAK = 16;
 	public static final int FLAG_DECIMAL = 8;
 	public static final int FLAG_INTERRUPT_DISABLE = 4;
 	public static final int FLAG_ZERO = 2;
 	public static final int FLAG_CARRY = 1;
+
+	// this masks off the unused and BRK bits since the register does not store them
+	public static final int STATUS_REGISTER_MASK = 0xCF;
 
 	private final BusHandler busHandler;
 
@@ -70,6 +74,13 @@ public final class Cpu {
 	private int read16ZeroPage(int address) {
 		int low = read(address & 0xff);
 		int high = read((address + 1) & 0xff);
+		return low + (high << 8);
+	}
+
+	private int read16Wrapped(int address) {
+		int nextAddress = (address & 0xff00) | ((address + 1) & 0xff);
+		int low = read(address) & 0xff;
+		int high = read(nextAddress) & 0xff;
 		return low + (high << 8);
 	}
 
@@ -161,13 +172,13 @@ public final class Cpu {
 		a = x = y = 0;
 		pc = read16(Constants.RESET_VECTOR_LOCATION);
 		sp = 0xfd;
-		status = 0x34;
+		status = FLAG_INTERRUPT_DISABLE;
 	}
 
 	public void fireNmi() {
 		push(pc >> 8);
 		push(pc & 0xff);
-		push(status);
+		push(status | FLAG_DUMMY);
 		pc = read16(Constants.NMI_VECTOR_LOCATION);
 		setFlag(FLAG_INTERRUPT_DISABLE);
 	}
@@ -176,7 +187,7 @@ public final class Cpu {
 	public void fireIrq() {
 		push(pc >> 8);
 		push(pc & 0xff);
-		push(status);
+		push(status | FLAG_DUMMY);
 		pc = read16(Constants.INTERRUPT_VECTOR_LOCATION);
 		setFlag(FLAG_INTERRUPT_DISABLE);
 	}
@@ -365,7 +376,7 @@ public final class Cpu {
 				fetch();
 				push(pc >> 8);
 				push(pc & 0xff);
-				push(status | FLAG_BREAK);
+				push(status | FLAG_BREAK | FLAG_DUMMY);
 				pc = read16(Constants.INTERRUPT_VECTOR_LOCATION);
 				setFlag(FLAG_INTERRUPT_DISABLE);
 				break;
@@ -385,7 +396,7 @@ public final class Cpu {
 				break;
 
 			case 0x08: // PHP
-				push(status);
+				push(status | FLAG_BREAK | FLAG_DUMMY);
 				break;
 
 			case 0x09: // ORA - immediate
@@ -472,7 +483,7 @@ public final class Cpu {
 				break;
 
 			case 0x28: // PLP
-				status = pull();
+				status = pull() & STATUS_REGISTER_MASK;
 				break;
 
 			case 0x29: // AND - immediate
@@ -656,8 +667,9 @@ public final class Cpu {
 			}
 
 			case 0x6c: // JMP - indirect
-				// this is not zero page indirect, as the other indirect addressing modes are, but 16-bit indirect
-				pc = read16(fetch16());
+				// Unlike other indirect addressing, the initial address is 16 bits, not a zero page address.
+				// Wraparound still occurs within the page that address points to.
+				pc = read16Wrapped(fetch16());
 				break;
 
 			case 0x6d: // ADC - absolute
