@@ -41,7 +41,7 @@ public final class PpuBusHandler {
 				return (byte) readDataRegister;
 			}
 		} else {
-			return paletteRam[address & 31];
+			return paletteRam[decodePaletteAddress(address)];
 		}
 
 	}
@@ -54,8 +54,17 @@ public final class PpuBusHandler {
 			// TODO mirroring
 			nametableRam[address & 0x03ff] = data;
 		} else {
-			paletteRam[address & 31] = data;
+			paletteRam[decodePaletteAddress(address)] = data;
 		}
+	}
+
+	private int decodePaletteAddress(int address) {
+		if ((address & 3) == 0) {
+			address = address & 15;
+		} else {
+			address = address & 31;
+		}
+		return address;
 	}
 
 	private String toHex(int value, int digits) {

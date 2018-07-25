@@ -27,8 +27,8 @@ public class Main {
 		launcher.setScreenHeight(Constants.SCREEN_HEIGHT);
 		launcher.startup();
 
-		// CartridgeFileContents cartridgeFileContents = new CartridgeFileContents(new File("/Users/martin/test.nes"));
-		CartridgeFileContents cartridgeFileContents = new CartridgeFileContents(new File("resource/roms/nestest.nes"));
+		CartridgeFileContents cartridgeFileContents = new CartridgeFileContents(new File("/Users/martin/test.nes"));
+		// CartridgeFileContents cartridgeFileContents = new CartridgeFileContents(new File("resource/roms/nestest.nes"));
 		final SequentialNesModel model = new SequentialNesModel(cartridgeFileContents);
 
 		new Thread(() -> {
