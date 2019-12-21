@@ -4,8 +4,6 @@
  */
 package name.martingeisse.esdk2.demo.nes.model.sequential;
 
-import org.lwjgl.input.Keyboard;
-
 /**
  *
  */
@@ -34,14 +32,15 @@ public final class InputPorts {
 
 	private void latchController1Data() {
 		latchedController1Data = 0;
-		latchedController1Data |= (Keyboard.isKeyDown(Keyboard.KEY_UP) ? 16 : 0);
-		latchedController1Data |= (Keyboard.isKeyDown(Keyboard.KEY_DOWN) ? 32 : 0);
-		latchedController1Data |= (Keyboard.isKeyDown(Keyboard.KEY_LEFT) ? 64 : 0);
-		latchedController1Data |= (Keyboard.isKeyDown(Keyboard.KEY_RIGHT) ? 128 : 0);
-		latchedController1Data |= (Keyboard.isKeyDown(Keyboard.KEY_X) ? 1 : 0); // A
-		latchedController1Data |= (Keyboard.isKeyDown(Keyboard.KEY_C) ? 2 : 0); // B
-		latchedController1Data |= (Keyboard.isKeyDown(Keyboard.KEY_RETURN) ? 8 : 0); // start
-		latchedController1Data |= (Keyboard.isKeyDown(Keyboard.KEY_SPACE) ? 4 : 0); // select
+		// TODO
+//		latchedController1Data |= (Keyboard.isKeyDown(Keyboard.KEY_UP) ? 16 : 0);
+//		latchedController1Data |= (Keyboard.isKeyDown(Keyboard.KEY_DOWN) ? 32 : 0);
+//		latchedController1Data |= (Keyboard.isKeyDown(Keyboard.KEY_LEFT) ? 64 : 0);
+//		latchedController1Data |= (Keyboard.isKeyDown(Keyboard.KEY_RIGHT) ? 128 : 0);
+//		latchedController1Data |= (Keyboard.isKeyDown(Keyboard.KEY_X) ? 1 : 0); // A
+//		latchedController1Data |= (Keyboard.isKeyDown(Keyboard.KEY_C) ? 2 : 0); // B
+//		latchedController1Data |= (Keyboard.isKeyDown(Keyboard.KEY_RETURN) ? 8 : 0); // start
+//		latchedController1Data |= (Keyboard.isKeyDown(Keyboard.KEY_SPACE) ? 4 : 0); // select
 	}
 
 	public byte read17() {

@@ -1,6 +1,8 @@
 .DS_Store
 *~
-/out
+/.gradle
 /.idea
 /esdk2-nes-demo.iml
+/build
+/out
 /ise
