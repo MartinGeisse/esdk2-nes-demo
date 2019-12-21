@@ -20,8 +20,6 @@ public class Main {
 	public static void main(String[] args) throws Exception {
 
 		Launcher launcher = new Launcher();
-		launcher.setWidth(Constants.SCREEN_WIDTH);
-		launcher.setHeight(Constants.SCREEN_HEIGHT);
 		launcher.startup();
 		long window = launcher.getWindow();
 
@@ -41,12 +39,6 @@ public class Main {
 //
 
 
-		// This line is critical for LWJGL's interoperation with GLFW's
-		// OpenGL context, or any context that is managed externally.
-		// LWJGL detects the context that is current in the current thread,
-		// creates the GLCapabilities instance and makes the OpenGL
-		// bindings available for use.
-		GL.createCapabilities();
 
 		// Setup a key callback. It will be called every time a key is pressed, repeated or released.
 		glfwSetKeyCallback(window, (win, key, scancode, action, mods) -> {
@@ -56,23 +48,10 @@ public class Main {
 		});
 		while (!glfwWindowShouldClose(window)) {
 
-			// OS-related housekeeping
-//			Display.update();
-//			Display.processMessages();
-//			Mouse.poll();
-//			Keyboard.poll();
-
-			// allow to exit by pressing escape
-//			if (Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)) {
-//				break;
-//			}
-
 			// simulation
 //			for (int i = 0; i < 100; i++) {
 //				model.frame();
 //			}
-
-
 
 			glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -81,7 +60,6 @@ public class Main {
 		}
 
 		launcher.shutdown();
-//		System.exit(0);
 
 	}
 
