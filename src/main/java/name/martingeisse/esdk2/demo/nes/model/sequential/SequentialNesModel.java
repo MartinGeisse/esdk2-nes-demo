@@ -1,6 +1,7 @@
 package name.martingeisse.esdk2.demo.nes.model.sequential;
 
 import name.martingeisse.esdk2.demo.nes.model.CartridgeFileContents;
+import name.martingeisse.esdk2.demo.nes.model.Controller;
 import name.martingeisse.esdk2.demo.nes.ui.Screen;
 
 /**
@@ -163,6 +164,10 @@ public class SequentialNesModel {
 		for (int i = 0; i < 100; i++) {
 			cpu.step();
 		}
+	}
+
+	public void setController(Controller controller) {
+		inputPorts.setController(controller);
 	}
 
 }

@@ -31,7 +31,8 @@ public class Launcher {
         glfwDefaultWindowHints();
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-        window = glfwCreateWindow(Constants.SCREEN_WIDTH, Constants.SCREEN_HEIGHT, "NES", NULL, NULL);
+        window = glfwCreateWindow(Constants.SCREEN_WIDTH * Constants.SCREEN_ZOOM,
+                Constants.SCREEN_HEIGHT * Constants.SCREEN_ZOOM, "NES", NULL, NULL);
         if (window == NULL) {
             throw new RuntimeException("Failed to create the GLFW window");
         }

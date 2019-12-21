@@ -18,18 +18,26 @@ import java.nio.IntBuffer;
  */
 public class Screen {
 
-	private final IntBuffer buffer = ByteBuffer.allocateDirect(Constants.SCREEN_WIDTH * Constants.SCREEN_HEIGHT * 4).asIntBuffer();
+	private final IntBuffer buffer = ByteBuffer.allocateDirect(
+			Constants.SCREEN_WIDTH * Constants.SCREEN_ZOOM * Constants.SCREEN_HEIGHT * Constants.SCREEN_ZOOM * 4).asIntBuffer();
 
 	public void setPixel(int x, int y, int rgb) {
 		if (x < 0 || x >= Constants.SCREEN_WIDTH || y < 0 || y >= Constants.SCREEN_HEIGHT) {
 			throw new IllegalArgumentException("position outside screen bounds: " + x + ", " + y);
 		}
-		buffer.put((Constants.SCREEN_HEIGHT - 1 - y) * Constants.SCREEN_WIDTH + x, rgb);
+		for (int dx = 0; dx < Constants.SCREEN_ZOOM; dx++) {
+			for (int dy = 0; dy < Constants.SCREEN_ZOOM; dy++) {
+				int x2 = Constants.SCREEN_ZOOM * x + dx;
+				int y2 = Constants.SCREEN_ZOOM * (Constants.SCREEN_HEIGHT - 1 - y) + dy;
+				buffer.put(y2 * Constants.SCREEN_WIDTH * Constants.SCREEN_ZOOM + x2, rgb);
+			}
+		}
 	}
 
 	public void render() {
 		GL14.glWindowPos2i(0, 0);
-		GL11.glDrawPixels(Constants.SCREEN_WIDTH, Constants.SCREEN_HEIGHT, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8, buffer);
+		GL11.glDrawPixels(Constants.SCREEN_WIDTH * Constants.SCREEN_ZOOM, Constants.SCREEN_HEIGHT * Constants.SCREEN_ZOOM,
+				GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8, buffer);
 		GlUtil.checkError();
 	}
 
