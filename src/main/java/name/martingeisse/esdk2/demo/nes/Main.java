@@ -48,6 +48,12 @@ public class Main {
 		// bindings available for use.
 		GL.createCapabilities();
 
+		// Setup a key callback. It will be called every time a key is pressed, repeated or released.
+		glfwSetKeyCallback(window, (win, key, scancode, action, mods) -> {
+			if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
+				glfwSetWindowShouldClose(win, true);
+			}
+		});
 		while (!glfwWindowShouldClose(window)) {
 
 			// OS-related housekeeping
