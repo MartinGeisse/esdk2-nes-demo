@@ -203,13 +203,23 @@ public final class Cpu {
 
 	private static final boolean[] silencedLocations = new boolean[0x10000];
 	static {
+		for (int i = 0x8000; i < 0x8060; i++) {
+			silencedLocations[i] = true;
+		}
+		for (int i = 0x90cc; i < 0x90e7; i++) {
+			silencedLocations[i] = true;
+		}
+		for (int i = 0x8220; i < 0x8231; i++) {
+			silencedLocations[i] = true;
+		}
+		for (int i = 0x8e19; i < 0x8e5c; i++) {
+			silencedLocations[i] = true;
+		}
 	}
 
 	public void step() {
 
-		// boolean debug = true;//(pc > 0x800b) && (pc != 0x8070);
-		// boolean debug = !silencedLocations[pc];
-		boolean debug = false;
+		boolean debug = !silencedLocations[pc];
 		if (debug) {
 			System.out.print("pc=" + toHex(pc, 4) + " a=" + toHex(a, 2) + " x=" + toHex(x, 2) + " y=" + toHex(y, 2));
 			System.out.print(" sp=" + toHex(sp, 2) + " status: ");
